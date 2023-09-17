@@ -3,7 +3,7 @@ Static website generator.
 
 # WIP
 
-Based on libxml and libxslt.
+Based on [libxml2](https://gitlab.gnome.org/GNOME/libxml2) and [libxslt](https://gitlab.gnome.org/GNOME/libxslt).
 
 Uses a fork of [jbussdiekers golibxml](https://github.com/jbussdieker/golibxml). Import is aliased to `../golibxml`.
 
