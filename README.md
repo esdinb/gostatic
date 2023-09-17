@@ -9,7 +9,7 @@ Uses a fork of [jbussdiekers golibxml](https://github.com/jbussdieker/golibxml).
 
 Uses [yuins goldmark](https://github.com/yuin/goldmark) Markdown parser.
 
-## Installation
+## Building
 
 Clone the gostatic repository:
 
