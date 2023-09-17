@@ -13,13 +13,10 @@ var generateCmd = &cobra.Command{
 	Use:   "generate",
     Aliases: []string{"gen"},
     Example: "generate banner:example ./index.html .",
-	Short: "Generate an XML file from a template",
-	Long: `Generate an XML file from an XML template.
+	Short: "One-shot build from a template",
+	Long: `Build a file from a template named on the command line.
 
 This command takes as arguments a number of named transformations, a source path and a destination path. 
-
-This command reads the source, applies the transformations to the source and writes the transformation result to destination.
-
     `,
     Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
