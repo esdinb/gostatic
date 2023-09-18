@@ -2,6 +2,8 @@ package builder
 
 import (
     "os"
+    "io"
+    "io/fs"
     "path/filepath"
     "errors"
     "strings"
@@ -24,7 +26,7 @@ func ReadFile(path string) *golibxml.Document {
 }
 
 func WriteFile(doc *golibxml.Document, path string) error {
-    err := os.MkdirAll(filepath.Dir(path), 0755)
+    err := os.MkdirAll(filepath.Dir(path), 0644)
     if err != nil {
         return err
     }
@@ -34,6 +36,23 @@ func WriteFile(doc *golibxml.Document, path string) error {
     } else {
         return nil
     }
+}
+
+func CopyFile(srcPath string, destPath string) error {
+    var err error
+    reader, err := os.OpenFile(srcPath, os.O_RDONLY, fs.ModeExclusive)
+    if err != nil {
+        return err
+    }
+    writer, err := os.OpenFile(destPath, os.O_RDWR | os.O_CREATE, 0755)
+    if err != nil {
+        return err
+    }
+    _, err = io.Copy(writer, reader)
+    if err != nil {
+        return err
+    }
+    return nil
 }
 
 type BuildCommand struct {
@@ -106,6 +125,10 @@ func (b *BuildSection) ProcessFile(inPath string, outPath string, rootPath strin
     return nil
 }
 
+func (b *BuildSection) CopyFile(inPath string, outPath string error {
+    return CopyFile(inPath, outPath)
+}
+
 func (b *BuildSection) Build(rootPath string) error {
     var err error
     absPath := rootPath
@@ -152,7 +175,11 @@ func (b *BuildSection) Build(rootPath string) error {
             }
             outPath = filepath.Join(absPath, relPath)
         }
-        err = b.ProcessFile(inPath, outPath, rootPath)
+        if strings.HasSuffix(inPath, ".html") || strings.HasSuffix(inPath, ".xml") {
+            err = b.ProcessFile(inPath, outPath, rootPath)
+        } else {
+            err = b.CopyFile(inPath, outPath)
+        }
         if err != nil{
             return err
         }
