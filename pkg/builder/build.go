@@ -30,7 +30,12 @@ func WriteFile(doc *golibxml.Document, path string) error {
     if err != nil {
         return err
     }
-    length := doc.SaveFile(path)
+    var length int
+    if strings.HasSuffix(path, ".html") {
+        length = doc.SaveHTMLFormatFileEnc(path, "UTF-8", 0)
+    } else {
+        length = doc.SaveFormatFileEnc(path, "UTF-8", 0)
+    }
     if length == -1 {
         return errors.New("failed to write transformation to file")
     } else {
@@ -125,7 +130,7 @@ func (b *BuildSection) ProcessFile(inPath string, outPath string, rootPath strin
     return nil
 }
 
-func (b *BuildSection) CopyFile(inPath string, outPath string error {
+func (b *BuildSection) CopyFile(inPath string, outPath string) error {
     return CopyFile(inPath, outPath)
 }
 
