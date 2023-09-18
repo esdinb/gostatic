@@ -26,16 +26,23 @@ func ReadFile(path string) *golibxml.Document {
 }
 
 func WriteFile(doc *golibxml.Document, path string) error {
-    err := os.MkdirAll(filepath.Dir(path), 0644)
+    err := os.MkdirAll(filepath.Dir(path), 0755)
     if err != nil {
         return err
     }
+    options := golibxml.SaveOption(0)
     var length int
     if strings.HasSuffix(path, ".html") {
-        length = doc.SaveHTMLFormatFileEnc(path, "UTF-8", 0)
-    } else {
-        length = doc.SaveFormatFileEnc(path, "UTF-8", 0)
+        options |= golibxml.XML_SAVE_NO_DECL
+        options |= golibxml.XML_SAVE_NO_EMPTY
+        options |= golibxml.XML_SAVE_AS_XML
     }
+    ctx := golibxml.SaveToFilename(path, "utf-8", options)
+    if ctx == nil {
+        return errors.New("failed to create save context")
+    }
+    length = ctx.SaveDoc(doc)
+    ctx.Free()
     if length == -1 {
         return errors.New("failed to write transformation to file")
     } else {
