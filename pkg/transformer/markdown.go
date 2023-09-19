@@ -1,6 +1,7 @@
 package transformer
 
 import (
+    "os"
     "fmt"
     "path/filepath"
     "strings"
@@ -35,7 +36,15 @@ func TransformMarkdown(context *Context, args []string) (*Context, Status, error
                 if strings.HasPrefix(path, "/") {
                     path = filepath.Join(context.RootPath, path)
                 } else {
-                    path = filepath.Join(context.InPath, path)
+                    fileInfo, err := os.Stat(context.InPath)
+                    if err != nil {
+                        return context, Continue, err
+                    }
+                    if fileInfo.IsDir() {
+                        path = filepath.Join(context.InPath, path)
+                    } else {
+                        path = filepath.Join(filepath.Dir(context.InPath), path)
+                    }
                 }
                 absPath, err = filepath.Abs(path)
                 if err != nil {
