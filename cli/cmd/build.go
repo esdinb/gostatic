@@ -89,6 +89,7 @@ func runBuild(ctx context.Context, wg *sync.WaitGroup, buildPath string) {
 
 var buildCmd = &cobra.Command{
     Use:   "build",
+    Example: "gostatic build -s build/ .",
     Short: "Build a site from configuration file",
     Long: `The build command reads build.yaml configuration file and generates site accordingly.
 
