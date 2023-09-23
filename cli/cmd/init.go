@@ -6,7 +6,7 @@ import (
     "io/fs"
     "path/filepath"
 
-	"github.com/spf13/cobra"
+    "github.com/spf13/cobra"
 )
 
 const (
@@ -21,14 +21,14 @@ const (
 )
 
 var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Generate a build configuration template",
-	Long: `Generate a template build.yaml file in the current directory or in the directory named on the command line.
+    Use:   "init",
+    Short: "Generate a build configuration template",
+    Long: `Generate a template build.yaml file in the current directory or in the directory named on the command line.
 
     ⚡️ + 🥚 = 🐣.
     `,
     Args: cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+    Run: func(cmd *cobra.Command, args []string) {
         var path string
         var info fs.FileInfo
         var err error
@@ -55,9 +55,9 @@ var initCmd = &cobra.Command{
             logger.Panicln(err)
         }
         logger.Println("Write", configName, "to", path, "🐣")
-	},
+    },
 }
 
 func init() {
-	rootCmd.AddCommand(initCmd)
+    rootCmd.AddCommand(initCmd)
 }

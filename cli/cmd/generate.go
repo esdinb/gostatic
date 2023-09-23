@@ -6,20 +6,20 @@ import (
 
     "gostatic/pkg/builder"
 
-	"github.com/spf13/cobra"
+    "github.com/spf13/cobra"
 )
 
 var generateCmd = &cobra.Command{
-	Use:   "generate",
+    Use:   "generate",
     Aliases: []string{"gen"},
     Example: "generate banner:example ./index.html .",
-	Short: "One-shot build from a template",
-	Long: `Build a file from a template named on the command line.
+    Short: "One-shot build from a template",
+    Long: `Build a file from a template named on the command line.
 
 This command takes as arguments a number of named transformations, a source path and a destination path. 
     `,
     Args: cobra.MinimumNArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+    Run: func(cmd *cobra.Command, args []string) {
 
         logger := log.New(os.Stdout, "🧪 ", 0)
 
@@ -34,9 +34,9 @@ This command takes as arguments a number of named transformations, a source path
         if err := section.Build("."); err != nil {
             logger.Fatal(err)
         }
-	},
+    },
 }
 
 func init() {
-	rootCmd.AddCommand(generateCmd)
+    rootCmd.AddCommand(generateCmd)
 }
