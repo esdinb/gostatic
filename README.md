@@ -9,6 +9,12 @@ Uses a fork of [jbussdiekers golibxml](https://github.com/jbussdieker/golibxml).
 
 Uses [yuins goldmark](https://github.com/yuin/goldmark) Markdown parser.
 
+## Requirements
+
+The libxml2 and libxslt libraries needs to be installed on the system.
+
+C library bindings uses CGO and require a C compiler to also be installed.
+
 ## Building
 
 Clone the gostatic repository:
