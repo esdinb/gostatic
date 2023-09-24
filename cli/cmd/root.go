@@ -31,7 +31,7 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-    logger := log.New(os.Stdout, "🐙 ", 0)
+    logger := log.New(os.Stderr, "🐙 ", 0)
     ctx := context.WithValue(context.Background(), LoggerContextKey, logger)
     err := rootCmd.ExecuteContext(ctx)
     if err != nil {
