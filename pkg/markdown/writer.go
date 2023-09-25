@@ -9,7 +9,9 @@ import (
 )
 
 func NewTreeWriter(chunk string, filename string) TreeWriter {
-	return TreeWriter{golibxml.CreateHTMLPushParser(chunk, filename)}
+	parser := golibxml.CreateHTMLPushParser(chunk, filename)
+	parser.UseOptions(golibxml.HTML_PARSE_RECOVER | golibxml.HTML_PARSE_NOERROR)
+	return TreeWriter{parser}
 }
 
 // implements the html.Writer interface
