@@ -1,84 +1,79 @@
 package markdown
 
 import (
-    "os"
-    "strconv"
-    "unicode/utf8"
+	"fmt"
+	"os"
+	"strconv"
+	"unicode/utf8"
 
-    "github.com/yuin/goldmark"
-    "github.com/yuin/goldmark/renderer/html"
+	"gostatic/pkg/markup"
 
-    frontmatter "go.abhg.dev/goldmark/frontmatter"
-    pikchr "github.com/jchenry/goldmark-pikchr"
-	highlighting "github.com/yuin/goldmark-highlighting/v2"
-    mathjax "github.com/litao91/goldmark-mathjax"
-    d2 "github.com/FurqanSoftware/goldmark-d2"
-    fences "github.com/stefanfritsch/goldmark-fences"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/renderer/html"
+
+	d2 "github.com/FurqanSoftware/goldmark-d2"
 	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
-
-    "github.com/jbussdieker/golibxml"
+	pikchr "github.com/jchenry/goldmark-pikchr"
+	mathjax "github.com/litao91/goldmark-mathjax"
+	fences "github.com/stefanfritsch/goldmark-fences"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
+	frontmatter "go.abhg.dev/goldmark/frontmatter"
 )
 
-const markdownHtmlParserOptions =
-    golibxml.XML_PARSE_RECOVER &
-    golibxml.XML_PARSE_NOENT &
-    golibxml.XML_PARSE_PEDANTIC &
-    golibxml.XML_PARSE_NONET
-
 func NewMarkdownConverter() goldmark.Markdown {
-    return goldmark.New(
-        goldmark.WithExtensions(
-            &frontmatter.Extender{},
-            &fences.Extender{},
-            &pikchr.Extender{},
-            &d2.Extender{
-        		// Defaults when omitted
-                //TODO: where are the imports?
-        		//Layout:  d2dagrelayout.Layout,
-        		//ThemeID: d2themescatalog.CoolClassics.ID,
-        	},
-            mathjax.MathJax,
-            highlighting.NewHighlighting(
-                highlighting.WithStyle("monokai"),
-                highlighting.WithFormatOptions(
-                    chromahtml.WithLineNumbers(true),
-                ),
-            ),
-        ),
-        goldmark.WithRendererOptions(
-            html.WithWriter(HtmlWriter{}),
-        ),
-    )
+	return goldmark.New(
+		goldmark.WithExtensions(
+			&frontmatter.Extender{},
+			&fences.Extender{},
+			&pikchr.Extender{},
+			&d2.Extender{
+				// Defaults when omitted
+				//TODO: where are the imports?
+				//Layout:  d2dagrelayout.Layout,
+				//ThemeID: d2themescatalog.CoolClassics.ID,
+			},
+			mathjax.MathJax,
+			highlighting.NewHighlighting(
+				highlighting.WithStyle("monokai"),
+				highlighting.WithFormatOptions(
+					chromahtml.WithLineNumbers(true),
+				),
+			),
+		),
+		goldmark.WithRendererOptions(
+			html.WithWriter(HtmlWriter{}),
+		),
+	)
 }
 
-func ConvertFile(filePath string) (*golibxml.Document, error) {
-    info, err := os.Stat(filePath)
-    if err != nil {
-        return nil, err
-    }
+func ConvertFile(filePath string, doc *markup.Document, node *markup.Node) error {
+	info, err := os.Stat(filePath)
+	if err != nil {
+		return err
+	}
 
-    _ = info
+	_ = info
 
-    fileSource, err := os.ReadFile(filePath)
-    if err != nil {
-        return nil, err
-    }
+	fileSource, err := os.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
 
-    return ConvertMemory(fileSource, filePath)
+	return ConvertMemory(fileSource, doc, node)
 }
 
-func ConvertMemory(fileSource []byte, filePath string) (*golibxml.Document, error) {
-    writer := NewTreeWriter("<div>", filePath)
-    defer writer.Free()
+func ConvertMemory(fileSource []byte, doc *markup.Document, node *markup.Node) error {
+	writer := NewTreeWriter(doc, node)
+	defer writer.Free()
 
-    md := NewMarkdownConverter()
-    if err := md.Convert(fileSource, &writer); err != nil {
-        return nil, err
-    }
+	writer.Write([]byte(fmt.Sprintf(`<div data-character-count="%s">`, strconv.Itoa(utf8.RuneCount(fileSource)))))
 
-    writer.Terminate("</div>")
-    doc := writer.Document()
-    doc.Root().SetAttribute("data-character-count", strconv.Itoa(utf8.RuneCount(fileSource)))
-    return doc, nil
+	md := NewMarkdownConverter()
+	if err := md.Convert(fileSource, &writer); err != nil {
+		return err
+	}
+
+	writer.Write([]byte("</div>"))
+	writer.Terminate()
+	return nil
 }
-

@@ -4,13 +4,13 @@ import (
 	"errors"
 	"unsafe"
 
-	"github.com/jbussdieker/golibxml"
+	"gostatic/pkg/markup"
+
 	"github.com/yuin/goldmark/util"
 )
 
-func NewTreeWriter(chunk string, filename string) TreeWriter {
-	parser := golibxml.CreateHTMLPushParser(chunk, filename)
-	parser.UseOptions(golibxml.HTML_PARSE_RECOVER | golibxml.HTML_PARSE_NOERROR)
+func NewTreeWriter(doc *markup.Document, node *markup.Node) TreeWriter {
+	parser := markup.CreateHTML5Parser(doc, node)
 	return TreeWriter{parser}
 }
 
@@ -32,14 +32,14 @@ func (w HtmlWriter) SecureWrite(writer util.BufWriter, source []byte) {
 
 // implements the io.Writer interface
 type TreeWriter struct {
-	context *golibxml.HTMLParser
+	context *markup.HTML5Parser
 }
 
-func (w TreeWriter) Terminate(chunk string) {
-	w.context.Terminate(chunk)
+func (w TreeWriter) Terminate() {
+	w.context.Terminate()
 }
 
-func (w TreeWriter) Document() *golibxml.Document {
+func (w TreeWriter) Document() *markup.Document {
 	return w.context.MyDoc()
 }
 
@@ -48,7 +48,7 @@ func (w TreeWriter) Free() {
 }
 
 func (w *TreeWriter) Write(p []byte) (n int, err error) {
-	if res := w.context.ParseChunk(*(*string)(unsafe.Pointer(&p))); res != 0 {
+	if res := w.context.ParseChunk(*(*string)(unsafe.Pointer(&p))); res < 0 {
 		return 0, errors.New("TreeWriter error")
 	}
 	return len(p), nil

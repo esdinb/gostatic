@@ -1,3 +1,4 @@
+// Gostatic generates websites
 package main
 
 import "gostatic/cli/cmd"
