@@ -18,29 +18,16 @@ type HTML5Parser struct {
 }
 
 func CreateHTML5Parser(doc *Document, node *Node) *HTML5Parser {
-	const (
-		alignment uintptr = 8
-		blockSize         = 1024 * alignment
-		pageSize          = 1024 * blockSize
-	)
 	var ptrn C.xmlNodePtr = nil
 	if node != nil {
 		ptrn = node.Ptr
 	}
 	if ptrc := C.html5_create_parser_context(doc.Ptr, ptrn); ptrc != nil {
-		fba, err := cgoalloc.CreateFixedBlockAllocator(
-			&cgoalloc.DefaultAllocator{},
-			pageSize,
-			blockSize,
-			alignment,
-		)
-		if err != nil {
-			return nil
-		}
+		dfa := &cgoalloc.DefaultAllocator{}
 		return &HTML5Parser{
 			Context:   ptrc,
 			Document:  doc.Ptr,
-			Allocator: cgoalloc.CreateArenaAllocator(fba),
+			Allocator: cgoalloc.CreateArenaAllocator(dfa),
 		}
 	}
 	return nil
