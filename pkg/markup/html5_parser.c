@@ -17,7 +17,7 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
     }
 
     if (token->tag_id == LXB_TAG__TEXT) {
-        xmlTextWriterWriteFormatRaw(writer, "%.*s", (int) (token->end - token->begin), token->begin);
+        xmlTextWriterWriteFormatString(writer, "%.*s", (int) (token->end - token->begin), token->begin);
 
         return token;
     }
