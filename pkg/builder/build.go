@@ -173,6 +173,8 @@ func (b *BuildSection) Build(rootPath string) error {
 			outPathIsADir = fileInfo.IsDir()
 		}
 		outPath = absPath
+	} else {
+		return errors.New("cannot write to stdout")
 	}
 
 	var matches []string
