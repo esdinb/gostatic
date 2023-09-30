@@ -1,6 +1,5 @@
 /*
  */
-#include <inttypes.h>
 #include "html5_parser.h"
 
 static lxb_html_token_t *
@@ -11,7 +10,6 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
     lexbor_hash_t *tags = lxb_html_tokenizer_tags(tokenizer);
     xmlTextWriterPtr writer = (xmlTextWriterPtr) ctx;
 
-    char quote;
     lxb_html_token_attr_t *attr;
 
     if (token->tag_id == LXB_TAG__END_OF_FILE) {
