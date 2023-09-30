@@ -1,6 +1,9 @@
 # gostatic
 Static website generator.
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/esdinb/gostatic?style=flat-square)](https://goreportcard.com/report/github.com/golang-standards/project-layout)
+
+
 # WIP
 
 Based on [libxml2](https://gitlab.gnome.org/GNOME/libxml2) and [libxslt](https://gitlab.gnome.org/GNOME/libxslt).
