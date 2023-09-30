@@ -66,14 +66,14 @@ func ConvertMemory(fileSource []byte, doc *markup.Document, node *markup.Node) e
 	writer := NewTreeWriter(doc, node)
 	defer writer.Free()
 
-	writer.Write([]byte(fmt.Sprintf(`<div data-character-count="%s">`, strconv.Itoa(utf8.RuneCount(fileSource)))))
+	writer.Write([]byte(fmt.Sprintf(`<section data-character-count="%s">`, strconv.Itoa(utf8.RuneCount(fileSource)))))
 
 	md := NewMarkdownConverter()
 	if err := md.Convert(fileSource, &writer); err != nil {
 		return err
 	}
 
-	writer.Write([]byte("</div>"))
+	writer.Write([]byte("</section>"))
 	writer.Terminate()
 	return nil
 }
