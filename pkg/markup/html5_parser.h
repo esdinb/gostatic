@@ -1,6 +1,7 @@
 #include <libxml/xmlwriter.h>
 #include <libxml/tree.h>
 #include <lexbor/html/tokenizer.h>
+#include <lexbor/html/tag.h>
 
 #define FAILED(...)                                                            \
     do {                                                                       \

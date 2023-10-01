@@ -50,6 +50,10 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
         attr = attr->next;
     }
 
+    if (lxb_html_tag_is_void(token->tag_id)) {
+        xmlTextWriterEndElement(writer);
+    }
+
     if (token->type & LXB_HTML_TOKEN_TYPE_CLOSE_SELF) {
         xmlTextWriterEndElement(writer);
     }
