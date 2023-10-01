@@ -146,14 +146,15 @@ func (b *BuildSection) CopyFile(inPath string, outPath string) error {
 
 func (b *BuildSection) Build(rootPath string) error {
 	var err error
-	absPath := rootPath
+	absoluteRootPath, err := filepath.Abs(rootPath)
+	if err != nil {
+		return err
+	}
+	absPath := absoluteRootPath
 	outPath := b.Out
 	outPathIsADir := strings.HasSuffix(outPath, string(os.PathSeparator))
 	if outPath != "-" {
-		absPath, err = filepath.Abs(filepath.Join(rootPath, outPath))
-		if err != nil {
-			return err
-		}
+		absPath = filepath.Join(absoluteRootPath, outPath)
 
 		fileInfo, err := os.Stat(absPath)
 		if err != nil {
@@ -200,7 +201,7 @@ func (b *BuildSection) Build(rootPath string) error {
 			outPath = filepath.Join(absPath, relPath)
 		}
 		if strings.HasSuffix(inPath, ".html") || strings.HasSuffix(inPath, ".xml") {
-			err = b.ProcessFile(inPath, outPath, rootPath)
+			err = b.ProcessFile(inPath, outPath, absoluteRootPath)
 		} else {
 			err = b.CopyFile(inPath, outPath)
 		}

@@ -3,6 +3,8 @@ package transformer
 import (
 	"errors"
 	"gostatic/pkg/markup"
+	"path/filepath"
+	"strings"
 )
 
 func customLoader(context *Context) markup.DocLoaderFunc {
@@ -13,7 +15,11 @@ func customLoader(context *Context) markup.DocLoaderFunc {
 		ctx *markup.DocLoaderContext,
 		loadType markup.LoadType,
 	) *markup.Document {
-		return markup.DefaultLoader(uri, dict, options, ctx, loadType)
+		templatePath := uri
+		if !strings.HasPrefix(uri, context.RootPath) {
+			templatePath = filepath.Join(context.RootPath, uri)
+		}
+		return markup.DefaultLoader(templatePath, dict, options, ctx, loadType)
 	}
 }
 
