@@ -59,7 +59,7 @@ func CopyFile(srcPath string, destPath string) error {
 	if err != nil {
 		return err
 	}
-	writer, err := os.OpenFile(destPath, os.O_RDWR|os.O_CREATE, 0755)
+	writer, err := os.OpenFile(destPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
 	}
