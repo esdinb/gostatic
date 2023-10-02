@@ -4,3 +4,8 @@
   pipeline:
     - transform:inline
     - banner:gostatic
+- in: /input-without-pi.html
+  out: /output-without-pi.html
+  pipeline:
+    - transform:style.xsl
+    - banner:gostatic
