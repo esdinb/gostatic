@@ -121,8 +121,18 @@ var buildCmd = &cobra.Command{
 		if watchFiles || serveFiles {
 			watchCtx, _ := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 
+			inputPaths, err := collectInputPaths(buildPath)
+			if err != nil {
+				logger.Fatal(err)
+			}
+
 			wg.Add(1)
-			go runWatcher(watchCtx, wg, buildPath)
+			go runWatcher(watchCtx, wg, inputPaths, []string{}, func() {
+				buildCtx, _ := context.WithCancel(watchCtx)
+
+				wg.Add(1)
+				runBuild(buildCtx, wg, buildPath)
+			})
 
 			if serveFiles {
 				serverCtx, _ := context.WithCancel(watchCtx)
@@ -144,6 +154,5 @@ func init() {
 
 	buildCmd.Flags().BoolVarP(&watchFiles, "watch", "w", false, "Watch files")
 	buildCmd.Flags().StringVarP(&serverRoot, "serve", "s", "./build", "Server root directory")
-	buildCmd.Flags().StringVarP(&serverAddress, "address", "a", defaultServerAddress, "Server listen address")
-	buildCmd.Flags().IntVarP(&serverPort, "port", "p", defaultServerPort, "Server listen port")
+	addServeFlags(buildCmd)
 }
