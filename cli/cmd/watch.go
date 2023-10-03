@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -146,8 +145,6 @@ func runWatcher(ctx context.Context, wg *sync.WaitGroup, filePaths []string, mat
 			if baseName == "4913" { // Vim creates this file to test for write permission
 				continue
 			}
-
-			fmt.Println("event", event)
 
 			if !includePathMatch(matchPatterns, event.Name) {
 				continue
