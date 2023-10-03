@@ -36,7 +36,8 @@ func TransformTransform(context *Context, args []string) (*Context, Status, erro
 
 	filename = args[0]
 	if filename == "inline" {
-		if style = markup.LoadStylesheetPI(context.Document); style == nil {
+		style = markup.LoadStylesheetPI(context.Document)
+		if style == nil {
 			return context, Continue, errors.New("missing inline stylesheet")
 		}
 	} else {
@@ -47,7 +48,8 @@ func TransformTransform(context *Context, args []string) (*Context, Status, erro
 
 	params := []string{}
 
-	if result := markup.ApplyStylesheet(style, context.Document, params); result == nil {
+	result := markup.ApplyStylesheet(style, context.Document, params)
+	if result == nil {
 		return context, Continue, errors.New("error applying stylesheet")
 	} else {
 		context.Document.Free()
