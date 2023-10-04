@@ -30,14 +30,17 @@ or in the directory named on the command line.`,
 		var path string
 		var info fs.FileInfo
 		var err error
+
+		ctx := cmd.Context()
+
+		logger := ctx.Value(LoggerContextKey).(*log.Logger)
+		logger.SetPrefix("🐣  ")
+
 		if len(args) == 1 {
 			path = args[0]
 		} else {
 			path = "."
 		}
-
-		logger := ctx.Value(LoggerContextKey).(*log.Logger)
-		logger.SetPrefix("🐣  ")
 
 		info, err = os.Lstat(path)
 		if err != nil {
