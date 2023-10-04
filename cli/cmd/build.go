@@ -91,18 +91,15 @@ var buildCmd = &cobra.Command{
 	Use:     "build",
 	Example: "gostatic build -s build/ .",
 	Short:   "Build a site from configuration file",
-	Long: `The build command reads build.yaml configuration file and generates site accordingly.
-
-            🛠️ 🪜 🔩 🪚 🧱 🧪 🛁
-    `,
-	Args: cobra.MaximumNArgs(1),
+	Long:    `The build command reads build.yaml configuration file and generates site accordingly.`,
+	Args:    cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 
 		ctx := cmd.Context()
 
 		logger := ctx.Value(LoggerContextKey).(*log.Logger)
-		logger.SetPrefix("🛠️  ")
+		logger.SetPrefix("🧱  ")
 
 		argPath := ""
 		if len(args) > 0 {

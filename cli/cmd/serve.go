@@ -69,11 +69,9 @@ func runServer(ctx context.Context, wg *sync.WaitGroup, address string, port int
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start a http dev server",
-	Long: fmt.Sprintf(`Start development http server.
+	Long: fmt.Sprintf(`Start development http server (listens on %s:%d by default).
 
-    Listens on %s:%d by default.
-
-    Serves files from %s or the directory named on the command line.
+Serves files from %s or the directory named on the command line.
     `, defaultServerAddress, defaultServerPort, serverRoot),
 	Example: "serve --address 0.0.0.0 --port 8080",
 	Args:    cobra.MinimumNArgs(1),

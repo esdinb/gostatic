@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -47,7 +46,7 @@ This command takes as arguments a number of named transformations, a source path
 		wg := new(sync.WaitGroup)
 
 		runner := func() {
-			fmt.Println("rebuilding")
+			logger.Println("rebuilding")
 			if err := section.Build(rootPath); err != nil {
 				logger.Fatal(err)
 			}
