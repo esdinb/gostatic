@@ -163,7 +163,7 @@ func (b *BuildSection) Build(rootPath string) error {
 				if !outPathIsADir {
 					newPath = filepath.Dir(absPath)
 				}
-				err = os.MkdirAll(newPath, 0750)
+				err = os.MkdirAll(newPath, 0755)
 				if err != nil {
 					return err
 				}
