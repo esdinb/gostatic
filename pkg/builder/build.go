@@ -51,7 +51,7 @@ func WriteFile(doc *markup.Document, destPath string) error {
 
 func CopyFile(srcPath string, destPath string) error {
 	var err error
-	err = os.MkdirAll(filepath.Dir(destPath), 0755)
+	err = os.MkdirAll(filepath.Dir(destPath), 0644)
 	if err != nil {
 		return err
 	}
