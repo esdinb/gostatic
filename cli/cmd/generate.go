@@ -52,13 +52,13 @@ This command takes as arguments a number of named transformations, a source path
 			}
 		}
 
+		runner()
+
 		if watchFiles {
 			watchCtx, _ := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 
 			wg.Add(1)
 			go runWatcher(watchCtx, wg, []string{"."}, []string{inPath}, runner)
-		} else {
-			runner()
 		}
 
 		wg.Wait()
