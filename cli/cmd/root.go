@@ -12,7 +12,7 @@ type contextKey struct {
 	name string
 }
 
-func (k *contextKey) String() string { return "gostatic cli context value " + k.name }
+func (k *contextKey) String() string { return "gostatic cli context key " + k.name }
 
 var LoggerContextKey = contextKey{"logger"}
 var RootPathContextKey = contextKey{"rootpath"}

@@ -1,7 +1,7 @@
 package transformer
 
 import (
-	"gostatic/pkg/markup"
+	"context"
 )
 
 type Status int
@@ -11,14 +11,20 @@ const (
 	Continue
 )
 
-type Context struct {
-	InPath   string
-	OutPath  string
-	RootPath string
-	Document *markup.Document
+type contextKey struct {
+	name string
 }
 
-type TransformerFunc func(*Context, []string) (*Context, Status, error)
+func (k *contextKey) String() string { return "gostatic transform context key " + k.name }
+
+var InPathContextKey = contextKey{"inpath"}
+var OutPathContextKey = contextKey{"outpath"}
+var RootPathContextKey = contextKey{"rootpath"}
+var DocumentContextKey = contextKey{"documentpath"}
+var ParamsContextKey = contextKey{"paramspath"}
+var StringParamsContextKey = contextKey{"strparamspath"}
+
+type TransformerFunc func(context.Context, []string) (context.Context, Status, error)
 
 type registry map[string]TransformerFunc
 

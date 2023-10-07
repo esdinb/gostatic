@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"context"
 	"errors"
 	"io"
 	"io/fs"
@@ -36,12 +37,12 @@ func WriteFile(doc *markup.Document, destPath string) error {
 		options |= markup.XML_SAVE_NO_EMPTY
 		options |= markup.XML_SAVE_AS_XML
 	}
-	ctx := markup.SaveToFilename(destPath, "utf-8", options)
-	if ctx == nil {
+	saveCtx := markup.SaveToFilename(destPath, "utf-8", options)
+	if saveCtx == nil {
 		return errors.New("failed to create save context")
 	}
-	length = ctx.SaveDoc(doc)
-	ctx.Free()
+	defer saveCtx.Free()
+	length = saveCtx.SaveDoc(doc)
 	if length == -1 {
 		return errors.New("failed to write transformation to file")
 	} else {
@@ -94,7 +95,7 @@ func NewBuildSection(in string, out string, pipeline Pipeline) BuildSection {
 	return BuildSection{in, out, pipeline}
 }
 
-func (p *Pipeline) Transform(context *transformer.Context) (*transformer.Context, error) {
+func (p *Pipeline) Transform(ctx context.Context) (context.Context, error) {
 	var status transformer.Status
 	var err error
 	for _, command := range *p {
@@ -103,9 +104,9 @@ func (p *Pipeline) Transform(context *transformer.Context) (*transformer.Context
 		if fn == nil {
 			continue
 		}
-		context, status, err = fn(context, cmd.Args)
+		ctx, status, err = fn(ctx, cmd.Args)
 		if err != nil {
-			return context, err
+			return ctx, err
 		}
 		if status == transformer.Stop {
 			break
@@ -113,7 +114,7 @@ func (p *Pipeline) Transform(context *transformer.Context) (*transformer.Context
 			continue
 		}
 	}
-	return context, nil
+	return ctx, nil
 }
 
 func (b *BuildSection) ProcessFile(inPath string, outPath string, rootPath string) error {
@@ -124,19 +125,30 @@ func (b *BuildSection) ProcessFile(inPath string, outPath string, rootPath strin
 	} else {
 		doc = ReadFile(inPath)
 	}
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, transformer.InPathContextKey, inPath)
+	ctx = context.WithValue(ctx, transformer.OutPathContextKey, outPath)
+	ctx = context.WithValue(ctx, transformer.RootPathContextKey, rootPath)
+	ctx = context.WithValue(ctx, transformer.DocumentContextKey, doc)
+	ctx = context.WithValue(ctx, transformer.ParamsContextKey, []string{})
+	ctx = context.WithValue(ctx, transformer.StringParamsContextKey, []string{})
+
+	ctx, err = b.Pipeline.Transform(ctx)
+	if err != nil {
+		return err
+	}
+
+	doc = ctx.Value(transformer.DocumentContextKey).(*markup.Document)
 	defer doc.Free()
 
-	context := &transformer.Context{inPath, outPath, rootPath, doc}
+	outPath = ctx.Value(transformer.OutPathContextKey).(string)
 
-	context, err = b.Pipeline.Transform(context)
+	err = WriteFile(doc, outPath)
 	if err != nil {
 		return err
 	}
 
-	err = WriteFile(context.Document, context.OutPath)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -150,6 +162,7 @@ func (b *BuildSection) Build(rootPath string) error {
 	if err != nil {
 		return err
 	}
+
 	absPath := absoluteRootPath
 	outPath := b.Out
 	outPathIsADir := strings.HasSuffix(outPath, string(os.PathSeparator))
@@ -209,5 +222,6 @@ func (b *BuildSection) Build(rootPath string) error {
 			return err
 		}
 	}
+
 	return nil
 }

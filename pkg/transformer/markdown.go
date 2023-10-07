@@ -1,22 +1,25 @@
 package transformer
 
 import (
+	"context"
 	"fmt"
 	"gostatic/pkg/markdown"
 	"gostatic/pkg/markup"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
-func TransformMarkdown(context *Context, args []string) (*Context, Status, error) {
+func TransformMarkdown(ctx context.Context, args []string) (context.Context, Status, error) {
 
-	xpath := markup.NewXPathContext(context.Document)
+	document := ctx.Value(DocumentContextKey).(*markup.Document)
+	xpath := markup.NewXPathContext(document)
 	defer xpath.Free()
 
 	markdownFiles := xpath.Eval("//script[@type='text/markdown']")
 	if markdownFiles == nil {
-		return context, Continue, nil
+		return ctx, Continue, nil
 	}
 
 	defer markdownFiles.Free()
@@ -26,51 +29,66 @@ func TransformMarkdown(context *Context, args []string) (*Context, Status, error
 			replacement *markup.Node
 			path        string
 			absPath     string
+			sourcePath  string
 			err         error
 		)
 
 		content := strings.TrimSpace(node.GetContent())
 
+		rootPath := ctx.Value(RootPathContextKey).(string)
+		inPath := ctx.Value(InPathContextKey).(string)
 		absPath = ""
 		for attr := node.Attributes(); attr != nil; attr = attr.Next() {
 			if attr.Name() == "src" {
 				path = attr.Children().String()
 				if strings.HasPrefix(path, "/") {
-					path = filepath.Join(context.RootPath, path)
+					path = filepath.Join(rootPath, path)
 				} else {
-					fileInfo, err := os.Stat(context.InPath)
+					fileInfo, err := os.Stat(inPath)
 					if err != nil {
-						return context, Continue, err
+						return ctx, Continue, err
 					}
 					if fileInfo.IsDir() {
-						path = filepath.Join(context.InPath, path)
+						path = filepath.Join(inPath, path)
 					} else {
-						path = filepath.Join(filepath.Dir(context.InPath), path)
+						path = filepath.Join(filepath.Dir(inPath), path)
 					}
 				}
 				absPath, err = filepath.Abs(path)
 				if err != nil {
 					fmt.Println("error getting abs path of source file", path)
-					return context, Continue, err
+					return ctx, Continue, err
 				}
 				break
 			}
 		}
 
-		replacement = context.Document.NewFragment()
+		replacement = document.NewFragment()
+
 		node.AddNextSibling(*replacement)
 		node.Unlink()
+
 		if len(absPath) != 0 {
-			err = markdown.ConvertFile(absPath, context.Document, replacement)
+			sourcePath = absPath
+			err = markdown.ConvertFile(absPath, document, replacement)
 		} else {
-			err = markdown.ConvertMemory([]byte(content), context.Document, replacement)
+			sourcePath = inPath
+			err = markdown.ConvertMemory([]byte(content), document, replacement)
 		}
 		if err != nil {
-			return context, Continue, err
+			return ctx, Continue, err
 		}
+
+		fileInfo, err := os.Stat(sourcePath)
+		if err != nil {
+			return ctx, Continue, err
+		}
+		strparams := ctx.Value(StringParamsContextKey).([]string)
+		strparams = append(strparams, "modtime", fileInfo.ModTime().Format(time.DateOnly))
+		ctx = context.WithValue(ctx, StringParamsContextKey, strparams)
 	}
 
-	return context, Continue, nil
+	return ctx, Continue, nil
 }
 
 func init() {

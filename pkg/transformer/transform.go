@@ -1,44 +1,48 @@
 package transformer
 
 import (
+	"context"
 	"errors"
 	"gostatic/pkg/markup"
 	"path/filepath"
 	"strings"
 )
 
-func customLoader(context *Context) markup.DocLoaderFunc {
+func customLoader(ctx context.Context) markup.DocLoaderFunc {
 	return func(
 		uri string,
 		dict *markup.Dict,
 		options markup.ParserOption,
-		ctx *markup.DocLoaderContext,
+		loaderCtx *markup.DocLoaderContext,
 		loadType markup.LoadType,
 	) *markup.Document {
 		templatePath := uri
-		if !strings.HasPrefix(uri, context.RootPath) {
-			templatePath = filepath.Join(context.RootPath, uri)
+		rootPath := ctx.Value(RootPathContextKey).(string)
+		if !strings.HasPrefix(uri, rootPath) {
+			templatePath = filepath.Join(rootPath, uri)
 		}
-		return markup.DefaultLoader(templatePath, dict, options, ctx, loadType)
+		return markup.DefaultLoader(templatePath, dict, options, loaderCtx, loadType)
 	}
 }
 
-func TransformTransform(context *Context, args []string) (*Context, Status, error) {
+func TransformTransform(ctx context.Context, args []string) (context.Context, Status, error) {
 
 	if len(args) < 1 {
-		return context, Continue, errors.New("missing argument for transform")
+		return ctx, Continue, errors.New("missing argument for transform")
 	}
 
-	markup.SetLoaderFunc(customLoader(context))
+	markup.SetLoaderFunc(customLoader(ctx))
 
 	var filename string
 	var style *markup.Stylesheet
+	var document *markup.Document
 
+	document = ctx.Value(DocumentContextKey).(*markup.Document)
 	filename = args[0]
 	if filename == "inline" {
-		style = markup.LoadStylesheetPI(context.Document)
+		style = markup.LoadStylesheetPI(document)
 		if style == nil {
-			return context, Continue, errors.New("missing inline stylesheet")
+			return ctx, Continue, errors.New("missing inline stylesheet")
 		}
 	} else {
 		style = markup.ParseStylesheetFile(filename)
@@ -46,17 +50,18 @@ func TransformTransform(context *Context, args []string) (*Context, Status, erro
 
 	defer style.Free()
 
-	params := []string{}
+	params := ctx.Value(ParamsContextKey).([]string)
+	strparams := ctx.Value(StringParamsContextKey).([]string)
 
-	result := markup.ApplyStylesheet(style, context.Document, params)
-	if result == nil {
-		return context, Continue, errors.New("error applying stylesheet")
+	transformation := markup.ApplyStylesheet(style, document, params, strparams)
+	if transformation == nil {
+		return ctx, Continue, errors.New("error applying stylesheet")
 	} else {
-		context.Document.Free()
-		context.Document = result
+		document.Free()
+		ctx = context.WithValue(ctx, DocumentContextKey, transformation)
 	}
 
-	return context, Continue, nil
+	return ctx, Continue, nil
 }
 
 func init() {

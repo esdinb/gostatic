@@ -1,6 +1,9 @@
 package transformer
 
-import "gostatic/pkg/markup"
+import (
+	"context"
+	"gostatic/pkg/markup"
+)
 
 func normalizeWhitespace(doc *markup.Document) {
 	xpath := markup.NewXPathContext(doc)
@@ -16,20 +19,22 @@ func normalizeWhitespace(doc *markup.Document) {
 	}
 }
 
-func TransformWhitespace(context *Context, args []string) (*Context, Status, error) {
+func TransformWhitespace(ctx context.Context, args []string) (context.Context, Status, error) {
 	var subcommand string
 	if len(args) > 0 {
 		subcommand = args[0]
 	} else {
 		subcommand = "normalize"
 	}
+	document := ctx.Value(DocumentContextKey).(*markup.Document)
+
 	switch subcommand {
 	case "normalize":
-		normalizeWhitespace(context.Document)
+		normalizeWhitespace(document)
 	default:
 		break
 	}
-	return context, Continue, nil
+	return ctx, Continue, nil
 }
 
 func init() {
