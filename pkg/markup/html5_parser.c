@@ -42,7 +42,7 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
         xmlTextWriterStartAttribute(writer, attr_name);
 
         if (attr->value_begin) {
-            xmlTextWriterWriteFormatRaw(writer, "%.*s", (int) (attr->value_end - attr->value_begin), attr->value_begin);
+            xmlTextWriterWriteFormatRaw(writer, "%.*s", (int) (attr->value_size), attr->value);
         }
 
         xmlTextWriterEndAttribute(writer);
