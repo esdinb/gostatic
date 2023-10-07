@@ -17,8 +17,13 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
     }
 
     if (token->tag_id == LXB_TAG__TEXT) {
-        xmlTextWriterWriteFormatString(writer, "%.*s", (int) (token->end - token->begin), token->begin);
+        xmlTextWriterWriteFormatString(writer, "%.*s", (int) (token->text_end - token->text_start), token->text_start);
 
+        return token;
+    }
+
+    if (token->tag_id == LXB_TAG__EM_COMMENT) {
+        xmlTextWriterWriteFormatRaw(writer, "<!%.*s>", (int) (token->text_end - token->text_start), token->text_start);
         return token;
     }
 
