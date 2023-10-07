@@ -11,7 +11,6 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/renderer/html"
 
-	d2 "github.com/FurqanSoftware/goldmark-d2"
 	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
 	pikchr "github.com/jchenry/goldmark-pikchr"
 	mathjax "github.com/litao91/goldmark-mathjax"
@@ -26,12 +25,6 @@ func NewMarkdownConverter() goldmark.Markdown {
 			&frontmatter.Extender{},
 			&fences.Extender{},
 			&pikchr.Extender{},
-			&d2.Extender{
-				// Defaults when omitted
-				//TODO: where are the imports?
-				//Layout:  d2dagrelayout.Layout,
-				//ThemeID: d2themescatalog.CoolClassics.ID,
-			},
 			mathjax.MathJax,
 			highlighting.NewHighlighting(
 				highlighting.WithStyle("monokai"),
