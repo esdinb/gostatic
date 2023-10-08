@@ -84,7 +84,7 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 			return ctx, Continue, err
 		}
 		strparams := ctx.Value(StringParamsContextKey).([]string)
-		strparams = append(strparams, "markdownLastModified", fileInfo.ModTime().Format(time.DateOnly))
+		strparams = append(strparams, "markdownLastModified", fileInfo.ModTime().Format(time.RFC3339))
 		ctx = context.WithValue(ctx, StringParamsContextKey, strparams)
 	}
 
