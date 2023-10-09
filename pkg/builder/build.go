@@ -126,6 +126,10 @@ func (b *BuildSection) ProcessFile(inPath string, outPath string, rootPath strin
 		doc = ReadFile(inPath)
 	}
 
+	if doc == nil {
+		return errors.New("error reading input file")
+	}
+
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, transformer.InPathContextKey, inPath)
 	ctx = context.WithValue(ctx, transformer.OutPathContextKey, outPath)
