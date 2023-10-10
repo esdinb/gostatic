@@ -97,7 +97,7 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 		newAttrs := node.Attributes()
 		for newAttrs != nil {
 			attrName := newAttrs.Name()
-			if attrName != "is" {
+			if attrName != "is" && attrName != "src" {
 				newNode.SetAttribute(attrName, node.GetAttribute(attrName))
 			}
 			newAttrs = newAttrs.Next()
