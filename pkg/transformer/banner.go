@@ -24,7 +24,7 @@ func TransformBanner(ctx context.Context, args []string) (context.Context, Statu
 	banner := figure.NewFigure(text, font, true).String()
 	document := ctx.Value(DocumentContextKey).(*markup.Document)
 	comment := document.NewComment("\n" + banner + "\n\n")
-	document.FirstChild().AddPrevSibling(*comment)
+	document.FirstChild().AddPrevSibling(comment)
 	return ctx, Continue, nil
 }
 

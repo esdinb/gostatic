@@ -154,12 +154,12 @@ func (parent *Node) AddChildList(cur Node) *Node {
 }
 
 // xmlAddNextSibling
-func (cur *Node) AddNextSibling(elem Node) *Node {
+func (cur *Node) AddNextSibling(elem *Node) *Node {
 	return makeNode(C.xmlAddNextSibling(cur.Ptr, elem.Ptr))
 }
 
 // xmlAddPrevSibling
-func (cur *Node) AddPrevSibling(elem Node) *Node {
+func (cur *Node) AddPrevSibling(elem *Node) *Node {
 	return makeNode(C.xmlAddPrevSibling(cur.Ptr, elem.Ptr))
 }
 
@@ -321,6 +321,10 @@ func (doc *Document) SetRoot(root *Node) *Node {
 func (node *Node) FirstChild() *Node {
 	cnode := C.xmlFirstElementChild(node.Ptr)
 	return makeNode(cnode)
+}
+
+func (node *Node) FirstChildNode() *Node {
+	return makeNode(node.Ptr.children)
 }
 
 // xmlFreeDoc

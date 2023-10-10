@@ -66,8 +66,8 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 			}
 		}
 
-		replacement = document.NewFragment()
-		node.AddNextSibling(*replacement)
+		replacement = document.NewNode(nil, "div", "")
+		node.AddNextSibling(replacement)
 
 		rootName := node.Name()
 
@@ -91,7 +91,7 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 			return ctx, Continue, err
 		}
 
-		newNode := node.NextSibling()
+		newNode := replacement.AddPrevSibling(replacement.FirstChild())
 		newNode.SetAttribute("data-last-modified", fileInfo.ModTime().Format(time.RFC3339))
 		newNode.SetAttribute("data-character-count", strconv.Itoa(utf8.RuneCount(bytes)))
 		newAttrs := node.Attributes()
@@ -102,7 +102,10 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 			}
 			newAttrs = newAttrs.Next()
 		}
+		replacement.Unlink()
+		replacement.Free()
 		node.Unlink()
+		node.Free()
 	}
 
 	return ctx, Continue, nil
