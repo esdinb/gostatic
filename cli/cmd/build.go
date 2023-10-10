@@ -123,13 +123,16 @@ var buildCmd = &cobra.Command{
 				logger.Fatal(err)
 			}
 
-			wg.Add(1)
-			go runWatcher(watchCtx, wg, inputPaths, []string{}, func() {
+			runner := func() {
 				buildCtx, _ := context.WithCancel(watchCtx)
 
 				wg.Add(1)
 				runBuild(buildCtx, wg, buildPath)
-			})
+			}
+			runner()
+
+			wg.Add(1)
+			go runWatcher(watchCtx, wg, inputPaths, []string{}, runner)
 
 			if serveFiles {
 				serverCtx, _ := context.WithCancel(watchCtx)
