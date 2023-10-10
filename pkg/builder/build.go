@@ -127,7 +127,7 @@ func (b *BuildSection) ProcessFile(inPath string, outPath string, rootPath strin
 	}
 
 	if doc == nil {
-		return errors.New("error reading input file")
+		return errors.New("error processing input file")
 	}
 
 	ctx := context.Background()

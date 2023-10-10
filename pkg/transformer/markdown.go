@@ -2,13 +2,15 @@ package transformer
 
 import (
 	"context"
-	"fmt"
-	"gostatic/pkg/markdown"
-	"gostatic/pkg/markup"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
+
+	"gostatic/pkg/markdown"
+	"gostatic/pkg/markup"
 )
 
 func TransformMarkdown(ctx context.Context, args []string) (context.Context, Status, error) {
@@ -17,7 +19,7 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 	xpath := markup.NewXPathContext(document)
 	defer xpath.Free()
 
-	markdownFiles := xpath.Eval("//script[@type='text/markdown']")
+	markdownFiles := xpath.Eval("//*[@is='markdown-element']")
 	if markdownFiles == nil {
 		return ctx, Continue, nil
 	}
@@ -30,10 +32,12 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 			path        string
 			absPath     string
 			sourcePath  string
+			content     string
+			bytes       []byte
 			err         error
 		)
 
-		content := strings.TrimSpace(node.GetContent())
+		content = strings.TrimSpace(node.GetContent())
 
 		rootPath := ctx.Value(RootPathContextKey).(string)
 		inPath := ctx.Value(InPathContextKey).(string)
@@ -56,7 +60,6 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 				}
 				absPath, err = filepath.Abs(path)
 				if err != nil {
-					fmt.Println("error getting abs path of source file", path)
 					return ctx, Continue, err
 				}
 				break
@@ -64,17 +67,21 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 		}
 
 		replacement = document.NewFragment()
-
 		node.AddNextSibling(*replacement)
-		node.Unlink()
+
+		rootName := node.Name()
 
 		if len(absPath) != 0 {
+			bytes, err = os.ReadFile(absPath)
+			if err != nil {
+				return ctx, Continue, err
+			}
 			sourcePath = absPath
-			err = markdown.ConvertFile(absPath, document, replacement)
 		} else {
+			bytes = []byte(content)
 			sourcePath = inPath
-			err = markdown.ConvertMemory([]byte(content), document, replacement)
 		}
+		err = markdown.Convert(bytes, document, replacement, rootName)
 		if err != nil {
 			return ctx, Continue, err
 		}
@@ -83,9 +90,19 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 		if err != nil {
 			return ctx, Continue, err
 		}
-		strparams := ctx.Value(StringParamsContextKey).([]string)
-		strparams = append(strparams, "markdownLastModified", fileInfo.ModTime().Format(time.RFC3339))
-		ctx = context.WithValue(ctx, StringParamsContextKey, strparams)
+
+		newNode := node.NextSibling()
+		newNode.SetAttribute("data-last-modified", fileInfo.ModTime().Format(time.RFC3339))
+		newNode.SetAttribute("data-character-count", strconv.Itoa(utf8.RuneCount(bytes)))
+		newAttrs := node.Attributes()
+		for newAttrs != nil {
+			attrName := newAttrs.Name()
+			if attrName != "is" {
+				newNode.SetAttribute(attrName, node.GetAttribute(attrName))
+			}
+			newAttrs = newAttrs.Next()
+		}
+		node.Unlink()
 	}
 
 	return ctx, Continue, nil

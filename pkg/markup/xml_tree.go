@@ -1,11 +1,8 @@
-// Package markup is a wrapper around libxml2, libxslt and libhubbub
+// Package markup is a wrapper around libxml2, libxslt and lexbor html5 parser
 //
-// The package is based on jbussdiekers golibxml and libhubbub example code.
+// libxml2 wrappers are based on and mostly incorporated rom jbussdiekers golibxml
 //
 // https://github.com/jbussdieker/golibxml
-// https://gitlab.gnome.org/GNOME/libxml2.git
-// https://gitlab.gnome.org/GNOME/libxslt.git
-// https://git.netsurf-browser.org/libhubbub.git
 package markup
 
 /*
@@ -91,7 +88,6 @@ const (
 	XML_NAMESPACE_DECL                 = 18
 	XML_XINCLUDE_START                 = 19
 	XML_XINCLUDE_END                   = 20
-	XML_DOCB_DOCUMENT_NODE             = 21
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -283,6 +279,18 @@ func (node *Node) Copy(extended int) *Node {
 func (node *Node) CopyList() *Node {
 	cnode := C.xmlCopyNodeList(node.Ptr)
 	return makeNode(cnode)
+}
+
+// xmlGetProp
+func (node *Node) GetAttribute(name string) string {
+	cname := C.CString(name)
+	defer C.free_string(cname)
+	cstr := C.xmlGetProp(node.Ptr, C.to_xmlcharptr(cname))
+	if cstr == nil {
+		return ""
+	} else {
+		return C.GoString(C.to_charptr(cstr))
+	}
 }
 
 // xmlCopyProp
@@ -643,6 +651,14 @@ func (node *Node) SetAttribute(name string, value string) *Attribute {
 	defer C.free_string(ptrv)
 	cattr := C.xmlSetProp(node.Ptr, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptrv))
 	return makeAttribute(cattr)
+}
+
+// xmlUnSetProp
+func (node *Node) UnsetAttribute(name string) bool {
+	ptrn := C.CString(name)
+	defer C.free_string(ptrn)
+	res := C.xmlUnsetProp(node.Ptr, C.to_xmlcharptr(ptrn))
+	return res == 0
 }
 
 // xmlTextConcat

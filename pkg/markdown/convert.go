@@ -2,9 +2,6 @@ package markdown
 
 import (
 	"fmt"
-	"os"
-	"strconv"
-	"unicode/utf8"
 
 	"gostatic/pkg/markup"
 
@@ -39,34 +36,18 @@ func NewMarkdownConverter() goldmark.Markdown {
 	)
 }
 
-func ConvertFile(filePath string, doc *markup.Document, node *markup.Node) error {
-	info, err := os.Stat(filePath)
-	if err != nil {
-		return err
-	}
-
-	_ = info
-
-	fileSource, err := os.ReadFile(filePath)
-	if err != nil {
-		return err
-	}
-
-	return ConvertMemory(fileSource, doc, node)
-}
-
-func ConvertMemory(fileSource []byte, doc *markup.Document, node *markup.Node) error {
+func Convert(fileSource []byte, doc *markup.Document, node *markup.Node, rootName string) error {
 	writer := NewTreeWriter(doc, node)
 	defer writer.Free()
 
-	writer.Write([]byte(fmt.Sprintf(`<section data-character-count="%s">`, strconv.Itoa(utf8.RuneCount(fileSource)))))
+	writer.Write([]byte(fmt.Sprintf("<%s>", rootName)))
 
 	md := NewMarkdownConverter()
 	if err := md.Convert(fileSource, &writer); err != nil {
 		return err
 	}
 
-	writer.Write([]byte("</section>"))
+	writer.Write([]byte(fmt.Sprintf("</%s>", rootName)))
 	writer.Terminate()
 	return nil
 }
