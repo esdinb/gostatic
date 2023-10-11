@@ -25,7 +25,7 @@ func customLoader(ctx context.Context) markup.DocLoaderFunc {
 	}
 }
 
-func TransformTransform(ctx context.Context, args []string) (context.Context, Status, error) {
+func TemplateTransform(ctx context.Context, args []string) (context.Context, Status, error) {
 
 	if len(args) < 1 {
 		return ctx, Continue, errors.New("missing argument for transform")
@@ -65,5 +65,5 @@ func TransformTransform(ctx context.Context, args []string) (context.Context, St
 }
 
 func init() {
-	Registry.Register("transform", TransformTransform)
+	Registry.Register("template", TemplateTransform)
 }
