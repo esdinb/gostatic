@@ -27,6 +27,7 @@ require (
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/dlclark/regexp2 v1.8.1 // indirect
 	github.com/dop251/goja v0.0.0-20230122112309-96b1610dd4f7 // indirect
+	github.com/evanw/esbuild v0.19.4 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/gebv/pikchr v1.0.2 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
