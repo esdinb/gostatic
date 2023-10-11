@@ -2,10 +2,10 @@
 - in: /input.html
   out: /output.html
   pipeline:
-    - transform:inline
+    - template:inline
     - banner:gostatic
 - in: /input-without-pi.html
   out: /output-without-pi.html
   pipeline:
-    - transform:style.xsl
+    - template:style.xsl
     - banner:gostatic
