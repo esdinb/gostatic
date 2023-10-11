@@ -293,6 +293,14 @@ func (node *Node) GetAttribute(name string) string {
 	}
 }
 
+// xmlHasProp
+func (node *Node) HasAttribute(name string) *Attribute {
+	cname := C.CString(name)
+	defer C.free_string(cname)
+	cattr := C.xmlHasProp(node.Ptr, C.to_xmlcharptr(cname))
+	return makeAttribute(cattr)
+}
+
 // xmlCopyProp
 func (attr *Attribute) Copy(target *Node) *Attribute {
 	cattr := C.xmlCopyProp(target.Ptr, attr.Ptr)
