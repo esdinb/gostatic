@@ -1,0 +1,3 @@
+# build configuration
+- in: /input.txt
+  out: /output.txt
