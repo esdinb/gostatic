@@ -14,7 +14,9 @@ import (
 	"gostatic/pkg/transformer"
 )
 
-func ReadFile(srcPath string) *markup.Document {
+type ReadFileFunc = func(string) *markup.Document
+
+func ReadXMLFile(srcPath string) *markup.Document {
 	return markup.ReadFile(
 		srcPath,
 		"UTF-8",
@@ -24,6 +26,10 @@ func ReadFile(srcPath string) *markup.Document {
 			markup.XML_PARSE_NOBLANKS&
 			markup.XML_PARSE_XINCLUDE,
 	)
+}
+
+func ReadHTMLFile(srcPath string) *markup.Document {
+	return ReadXMLFile(srcPath)
 }
 
 func WriteFile(doc *markup.Document, destPath string) error {
@@ -119,13 +125,13 @@ func (p *Pipeline) Transform(ctx context.Context) (context.Context, error) {
 	return ctx, nil
 }
 
-func (b *BuildSection) ProcessFile(inPath string, outPath string, rootPath string) error {
+func (b *BuildSection) ProcessFile(inPath string, outPath string, rootPath string, readFile ReadFileFunc) error {
 	var doc *markup.Document
 	var err error
 	if inPath == "-" {
-		return errors.New("cannot read from stdin")
+		panic("cannot read from stdin")
 	} else {
-		doc = ReadFile(inPath)
+		doc = readFile(inPath)
 	}
 
 	if doc == nil {
@@ -194,7 +200,7 @@ func (b *BuildSection) Build(rootPath string) error {
 		}
 		outPath = absPath
 	} else {
-		return errors.New("cannot write to stdout")
+		panic("cannot write to stdout")
 	}
 
 	var matches []string
@@ -219,8 +225,10 @@ func (b *BuildSection) Build(rootPath string) error {
 			}
 			outPath = filepath.Join(absPath, relPath)
 		}
-		if strings.HasSuffix(inPath, ".html") || strings.HasSuffix(inPath, ".xml") {
-			err = b.ProcessFile(inPath, outPath, absoluteRootPath)
+		if strings.HasSuffix(inPath, ".xml") {
+			err = b.ProcessFile(inPath, outPath, absoluteRootPath, ReadXMLFile)
+		} else if strings.HasSuffix(inPath, ".html") {
+			err = b.ProcessFile(inPath, outPath, absoluteRootPath, ReadHTMLFile)
 		} else {
 			err = b.CopyFile(inPath, outPath)
 		}
