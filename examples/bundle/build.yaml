@@ -1,0 +1,6 @@
+# build configuration
+- in: /input.html
+  out: /output.html
+  pipeline:
+    - bundle
+    - banner:gostatic
