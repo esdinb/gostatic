@@ -3,6 +3,7 @@ package builder
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -102,6 +103,7 @@ func (p *Pipeline) Transform(ctx context.Context) (context.Context, error) {
 		cmd := command.Parse()
 		fn := transformer.Registry.Lookup(cmd.Name)
 		if fn == nil {
+			return ctx, errors.New(fmt.Sprintf("unknown transform name: %s", cmd.Name))
 			continue
 		}
 		ctx, status, err = fn(ctx, cmd.Args)
