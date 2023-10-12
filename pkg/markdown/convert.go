@@ -6,6 +6,7 @@ import (
 	"gostatic/pkg/markup"
 
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
 
 	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
@@ -29,6 +30,9 @@ func NewMarkdownConverter() goldmark.Markdown {
 					chromahtml.WithLineNumbers(true),
 				),
 			),
+		),
+		goldmark.WithParserOptions(
+			parser.WithAutoHeadingID(),
 		),
 		goldmark.WithRendererOptions(
 			html.WithWriter(HtmlWriter{}),
