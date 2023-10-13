@@ -2,41 +2,135 @@
  */
 #include "html5_parser.h"
 
+node_stack_t *
+node_stack_create()
+{
+    node_stack_t *stack = lexbor_calloc(1, sizeof(node_stack_t));
+    if (stack == NULL) {
+        return NULL;
+    }
+
+    stack->current = -1;
+    stack->capacity = DEFAULT_STACK_CAPACITY;
+    stack->nodes = lexbor_calloc(DEFAULT_STACK_CAPACITY, sizeof(xmlNodePtr));
+
+    return stack;
+}
+
+inline int
+node_stack_push(node_stack_t *stack, xmlNodePtr node)
+{
+    int next = ++stack->current;
+    if (next == stack->capacity) {
+        if (next == MAX_STACK_CAPACITY) {
+            FAILED("max stack capacity exceeded");
+        }
+        xmlNodePtr *tmp = stack->nodes;
+        int capacity = stack->capacity * 2;
+        stack->nodes = lexbor_calloc(capacity, sizeof(xmlNodePtr));
+        memcpy(stack->nodes, tmp, stack->capacity * sizeof(xmlNodePtr));
+        stack->capacity = capacity;
+        lexbor_free(tmp);
+    }
+    stack->nodes[next] = node;
+    stack->current = next;
+
+    return 0;
+}
+
+inline xmlNodePtr
+node_stack_pop(node_stack_t *stack)
+{
+    if (stack->current == -1) {
+        return NULL;
+    }
+
+    xmlNodePtr node = stack->nodes[stack->current];
+    stack->current--;
+
+    return node;
+}
+
+inline xmlNodePtr
+node_stack_peek(node_stack_t *stack)
+{
+    if (stack->current == -1) {
+        return NULL;
+    }
+
+    return stack->nodes[stack->current];
+}
+
+inline int
+node_stack_is_empty(node_stack_t *stack)
+{
+    return stack->current == -1;
+}
+
+inline int
+node_stack_size(node_stack_t *stack)
+{
+    return stack->current;
+}
+
+inline void
+node_stack_destroy(node_stack_t *stack)
+{
+    lexbor_free(stack->nodes);
+    lexbor_free(stack);
+}
+
 static lxb_html_token_t *
 token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *ctx)
 {
-    const lxb_char_t *name;
-    const lxb_char_t *attr_name;
-    lexbor_hash_t *tags = lxb_html_tokenizer_tags(tokenizer);
-    xmlTextWriterPtr writer = (xmlTextWriterPtr) ctx;
-
+    xmlNodePtr node;
+    xmlNodePtr text;
+    lxb_char_t *name;
+    const xmlChar *content;
     lxb_html_token_attr_t *attr;
+    const lxb_char_t *attr_name;
+    xmlAttrPtr attr_node;
+
+    lexbor_hash_t *tags = lxb_html_tokenizer_tags(tokenizer);
+
+    html5_parser_context_t *parser_ctx = (html5_parser_context_t*) ctx;
 
     if (token->tag_id == LXB_TAG__END_OF_FILE) {
         return token;
     }
 
     if (token->tag_id == LXB_TAG__TEXT) {
-        xmlTextWriterWriteFormatString(writer, "%.*s", (int) (token->text_end - token->text_start), token->text_start);
 
+        node = xmlNewDocTextLen(parser_ctx->document, (const xmlChar *) token->text_start, (int) (token->text_end - token->text_start));
+
+        html5_parse_append_element(parser_ctx, node);
+ 
         return token;
     }
 
     if (token->tag_id == LXB_TAG__EM_COMMENT) {
-        xmlTextWriterWriteFormatRaw(writer, "<!%.*s>", (int) (token->text_end - token->text_start), token->text_start);
+
+        node = xmlNewComment(NULL);
+        text = xmlNewDocTextLen(parser_ctx->document, (const xmlChar *) token->text_start, (int) (token->text_end - token->text_start));
+        if (xmlAddChild(node, text) == NULL) {
+            FAILED("failed to add comment text");
+        }
+
+        html5_parse_append_element(parser_ctx, node);
+
         return token;
     }
 
-    name = lxb_tag_name_by_id(tags, token->tag_id, NULL);
+    name = (lxb_char_t *) lxb_tag_name_by_id(tags, token->tag_id, NULL);
     if (name == NULL) {
-        FAILED("Failed to get token name");
+        FAILED("failed to get token name");
     }
 
     if (token->type & LXB_HTML_TOKEN_TYPE_CLOSE) {
-        xmlTextWriterEndElement(writer);
+        html5_parse_end_element(parser_ctx, token, name);
     }
     else {
-        xmlTextWriterStartElement(writer, (xmlChar *) name);
+        html5_parse_start_element(parser_ctx, token, name);
     }
 
     attr = token->attr_first;
@@ -44,23 +138,26 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
     while (attr != NULL) {
 
         attr_name = lxb_html_token_attr_name(attr, NULL);
-        xmlTextWriterStartAttribute(writer, attr_name);
+        node = node_stack_peek(parser_ctx->stack);
+        attr_node = xmlNewNsProp(node, NULL, (xmlChar *) attr_name, NULL);
 
         if (attr->value_begin) {
-            xmlTextWriterWriteFormatRaw(writer, "%.*s", (int) (attr->value_size), attr->value);
+            text = xmlNewDocTextLen(parser_ctx->document, (const xmlChar *) attr->value, (int) (attr->value_size));
+            if (text == NULL) {
+                FAILED("failed to create attribute value node");
+            }
+            xmlAddChild((xmlNodePtr) attr_node, text);
         }
-
-        xmlTextWriterEndAttribute(writer);
 
         attr = attr->next;
     }
 
     if (lxb_html_tag_is_void(token->tag_id)) {
-        xmlTextWriterEndElement(writer);
+        html5_parse_end_element(parser_ctx, token, name);
     }
 
     if (token->type & LXB_HTML_TOKEN_TYPE_CLOSE_SELF) {
-        xmlTextWriterEndElement(writer);
+        html5_parse_end_element(parser_ctx, token, name);
     }
 
     return token;
@@ -74,26 +171,29 @@ html5_create_parser_context(xmlDocPtr doc, xmlNodePtr node)
 
     ctx = lexbor_calloc(1, sizeof(html5_parser_context_t));
     if (ctx == NULL) {
-        FAILED("Failed to create parser context");
+        FAILED("failed to create parser context");
     }
 
     ctx->tokenizer = lxb_html_tokenizer_create();
 
     status = lxb_html_tokenizer_init(ctx->tokenizer);
     if (status != LXB_STATUS_OK) {
-        FAILED("Failed to create tokenizer object");
+        FAILED("failed to create tokenizer object");
     }
 
-    ctx->writer = xmlNewTextWriterTree(doc, node, 0);
-    if (ctx->writer == NULL) {
-        FAILED("Failed to create writer object");
+    ctx->document = doc;
+    ctx->node = node;
+
+    ctx->stack = node_stack_create();
+    if (ctx->stack == NULL) {
+        FAILED("failed to create context node stack");
     }
 
-    lxb_html_tokenizer_callback_token_done_set(ctx->tokenizer, token_callback, ctx->writer);
+    lxb_html_tokenizer_callback_token_done_set(ctx->tokenizer, token_callback, ctx);
 
     status = lxb_html_tokenizer_begin(ctx->tokenizer);
     if (status != LXB_STATUS_OK) {
-        FAILED("Failed to prepare tokenizer object for parsing");
+        FAILED("failed to prepare tokenizer object for parsing");
     }
 
     return ctx;
@@ -102,8 +202,7 @@ html5_create_parser_context(xmlDocPtr doc, xmlNodePtr node)
 void
 html5_destroy_parser_context(html5_parser_context_t *ctx)
 {
-    lxb_html_tokenizer_t *tokenizer;
-
+    node_stack_destroy(ctx->stack);
     lxb_html_tokenizer_destroy(ctx->tokenizer);
 }
 
@@ -114,25 +213,78 @@ html5_parse_chunk(html5_parser_context_t *ctx, char *data, size_t len)
 
     status = lxb_html_tokenizer_chunk(ctx->tokenizer, (lxb_char_t *) data, len);
     if (status != LXB_STATUS_OK) {
-        FAILED("Failed to parse the html data");
+        FAILED("failed to parse the html data");
     }
     return (int) len;
 }
 
 int
-html5_parse_end(html5_parser_context_t *ctx)
+html5_parse_end_document(html5_parser_context_t *ctx)
 {
     lxb_status_t status;
-    int result;
 
     status = lxb_html_tokenizer_end(ctx->tokenizer);
     if (status != LXB_STATUS_OK) {
-        FAILED("Failed to ending of parsing the html data");
+        FAILED("failed to end parsing html data");
     }
 
-    result = xmlTextWriterFlush(ctx->writer);
-    if (result < 0) {
-        FAILED("Failed to end document");
+    return 0;
+}
+
+int
+html5_parse_append_element(html5_parser_context_t *ctx, xmlNodePtr node)
+{
+    xmlNodePtr parent = (xmlNodePtr) node_stack_peek(ctx->stack);
+    xmlNodePtr res = xmlAddChild(parent, node);
+    if (res == NULL) {
+        return -1;
+    }
+    return 0;
+}
+
+int
+html5_parse_start_element(html5_parser_context_t *ctx, lxb_html_token_t *token, lxb_char_t *name)
+{
+    xmlNodePtr node = xmlNewDocNode(ctx->document, NULL, (const xmlChar *) name, NULL);
+    if (node == NULL) {
+        FAILED("failed to create new node");
+    }
+
+    if (node_stack_is_empty(ctx->stack)) {
+        if (ctx->node == NULL) {
+            xmlDocSetRootElement(ctx->document, node);
+        }
+        else {
+            node_stack_push(ctx->stack, ctx->node);
+        }
+    }
+
+    node_stack_push(ctx->stack, node);
+
+    return 0;
+}
+
+int
+html5_parse_end_element(html5_parser_context_t *ctx, lxb_html_token_t *token, lxb_char_t *name)
+{
+    xmlNodePtr node;
+   
+    if (node_stack_is_empty(ctx->stack)) {
+        return 0;
+    }
+
+    node  = node_stack_pop(ctx->stack);
+    if (node == NULL) {
+        FAILED("unmatched element");
+    }
+    
+    if (xmlStrcmp(node->name, (const xmlChar *) name)) {
+        FAILED("start and end element name mismatch");
+    }
+ 
+    int res = html5_parse_append_element(ctx, node);
+    if (res < 0) {
+        FAILED("unexpected end of document");
     }
 
     return 0;

@@ -28,13 +28,12 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 
 	for node := range markdownFiles.Results() {
 		var (
-			replacement *markup.Node
-			path        string
-			absPath     string
-			sourcePath  string
-			content     string
-			bytes       []byte
-			err         error
+			path       string
+			absPath    string
+			sourcePath string
+			content    string
+			bytes      []byte
+			err        error
 		)
 
 		content = strings.TrimSpace(node.GetContent())
@@ -66,11 +65,6 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 			}
 		}
 
-		replacement = document.NewNode(nil, "div", "")
-		node.AddNextSibling(replacement)
-
-		rootName := node.Name()
-
 		if len(absPath) != 0 {
 			bytes, err = os.ReadFile(absPath)
 			if err != nil {
@@ -81,7 +75,8 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 			bytes = []byte(content)
 			sourcePath = inPath
 		}
-		err = markdown.Convert(bytes, document, replacement, rootName)
+		node.SetContent("")
+		err = markdown.Convert(bytes, document, node)
 		if err != nil {
 			return ctx, Continue, err
 		}
@@ -91,21 +86,14 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 			return ctx, Continue, err
 		}
 
-		newNode := replacement.AddPrevSibling(replacement.FirstChild())
-		newNode.SetAttribute("data-last-modified", fileInfo.ModTime().Format(time.RFC3339))
-		newNode.SetAttribute("data-character-count", strconv.Itoa(utf8.RuneCount(bytes)))
-		newAttrs := node.Attributes()
-		for newAttrs != nil {
-			attrName := newAttrs.Name()
-			if attrName != "is" && attrName != "src" {
-				newNode.SetAttribute(attrName, node.GetAttribute(attrName))
-			}
-			newAttrs = newAttrs.Next()
+		node.SetAttribute("data-last-modified", fileInfo.ModTime().Format(time.RFC3339))
+		node.SetAttribute("data-character-count", strconv.Itoa(utf8.RuneCount(bytes)))
+		if attr := node.HasAttribute("is"); attr != nil {
+			markup.RemoveAttribute(attr)
 		}
-		replacement.Unlink()
-		replacement.Free()
-		node.Unlink()
-		node.Free()
+		if attr := node.HasAttribute("src"); attr != nil {
+			markup.RemoveAttribute(attr)
+		}
 	}
 
 	return ctx, Continue, nil

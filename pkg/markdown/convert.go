@@ -1,8 +1,6 @@
 package markdown
 
 import (
-	"fmt"
-
 	"gostatic/pkg/markup"
 
 	"github.com/yuin/goldmark"
@@ -40,18 +38,16 @@ func NewMarkdownConverter() goldmark.Markdown {
 	)
 }
 
-func Convert(fileSource []byte, doc *markup.Document, node *markup.Node, rootName string) error {
+func Convert(fileSource []byte, doc *markup.Document, node *markup.Node) error {
 	writer := NewTreeWriter(doc, node)
 	defer writer.Free()
-
-	writer.Write([]byte(fmt.Sprintf("<%s>", rootName)))
 
 	md := NewMarkdownConverter()
 	if err := md.Convert(fileSource, &writer); err != nil {
 		return err
 	}
 
-	writer.Write([]byte(fmt.Sprintf("</%s>", rootName)))
 	writer.Terminate()
+
 	return nil
 }

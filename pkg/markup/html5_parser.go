@@ -42,7 +42,7 @@ func (p *HTML5Parser) ParseChunk(chunk string) int {
 }
 
 func (p *HTML5Parser) Terminate() int {
-	if res := int(C.html5_parse_end(p.Context)); res < 0 {
+	if res := int(C.html5_parse_end_document(p.Context)); res < 0 {
 		return -1
 	}
 	return 0
