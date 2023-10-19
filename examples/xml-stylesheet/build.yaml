@@ -1,11 +1,11 @@
 # build configuration
-- in: /input.html
-  out: /output.html
+- in: /input.xml
+  out: /output1.html
   pipeline:
     - template:inline
     - banner:gostatic
-- in: /input-without-pi.html
-  out: /output-without-pi.html
+- in: /input.html
+  out: /output2.html
   pipeline:
     - template:style.xsl
     - banner:gostatic
