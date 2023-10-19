@@ -327,6 +327,7 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 	ctx = context.WithValue(ctx, transformer.OutPathContextKey, b.Out)
 	ctx = context.WithValue(ctx, transformer.RootPathContextKey, rootPath)
 
+	inPath := b.In
 	outPath := b.Out
 	outPathIsDir := strings.HasSuffix(outPath, string(os.PathSeparator))
 	absPath := filepath.Join(rootPathAbsolute, outPath)
@@ -334,7 +335,7 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 	if outPath == "-" {
 		outFile = os.Stdout
 		ctx = context.WithValue(ctx, transformer.OutFileContextKey, os.Stdout)
-		ctx = context.WithValue(ctx, transformer.FormatterContextKey, xmlFormatter)
+		ctx = context.WithValue(ctx, transformer.FormatterContextKey, lookupFormatter(filepath.Ext(inPath)))
 	} else {
 		if info, err := os.Stat(absPath); err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
@@ -397,11 +398,7 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 		}
 		freeBuildContext(ctx)
 	} else {
-		var (
-			matches []string
-			inPath  string
-		)
-		matches, err = filepath.Glob(filepath.Join(rootPath, b.In))
+		matches, err := filepath.Glob(filepath.Join(rootPath, b.In))
 		if err != nil {
 			return err
 		}
