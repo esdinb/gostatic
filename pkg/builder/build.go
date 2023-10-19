@@ -326,6 +326,8 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 	ctx = context.WithValue(ctx, transformer.InPathContextKey, b.In)
 	ctx = context.WithValue(ctx, transformer.OutPathContextKey, b.Out)
 	ctx = context.WithValue(ctx, transformer.RootPathContextKey, rootPath)
+	ctx = context.WithValue(ctx, transformer.ParamsContextKey, []string{})
+	ctx = context.WithValue(ctx, transformer.StringParamsContextKey, []string{})
 
 	inPath := b.In
 	outPath := b.Out

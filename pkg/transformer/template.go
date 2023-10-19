@@ -50,8 +50,14 @@ func TransformTemplate(ctx context.Context, args []string) (context.Context, Sta
 
 	defer style.Free()
 
-	params := ctx.Value(ParamsContextKey).([]string)
-	strparams := ctx.Value(StringParamsContextKey).([]string)
+	params, ok := ctx.Value(ParamsContextKey).([]string)
+	if !ok {
+		return ctx, Continue, errors.New("missing params array")
+	}
+	strparams, ok := ctx.Value(StringParamsContextKey).([]string)
+	if !ok {
+		return ctx, Continue, errors.New("missing strparams array")
+	}
 
 	transformation := markup.ApplyStylesheet(style, document, params, strparams)
 	if transformation == nil {
