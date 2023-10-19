@@ -90,6 +90,7 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
     lxb_html_token_attr_t *attr;
     const lxb_char_t *attr_name;
     xmlAttrPtr attr_node;
+    int is_void;
 
     lexbor_hash_t *tags = lxb_html_tokenizer_tags(tokenizer);
 
@@ -122,11 +123,12 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
     }
 
     name = (lxb_char_t *) lxb_tag_name_by_id(tags, token->tag_id, NULL);
+    is_void = lxb_html_tag_is_void(token->tag_id);
     if (name == NULL) {
         FAILED("failed to get token name");
     }
 
-    if (token->type & LXB_HTML_TOKEN_TYPE_CLOSE) {
+    if ((token->type & LXB_HTML_TOKEN_TYPE_CLOSE) && !is_void) {
         html5_parse_end_element(parser_ctx, token, name);
     }
     else {
@@ -152,11 +154,10 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
         attr = attr->next;
     }
 
-    if (lxb_html_tag_is_void(token->tag_id)) {
+    if (is_void) {
         html5_parse_end_element(parser_ctx, token, name);
     }
-
-    if (token->type & LXB_HTML_TOKEN_TYPE_CLOSE_SELF) {
+    else if (token->type & LXB_HTML_TOKEN_TYPE_CLOSE_SELF) {
         html5_parse_end_element(parser_ctx, token, name);
     }
 
@@ -269,10 +270,6 @@ html5_parse_end_element(html5_parser_context_t *ctx, lxb_html_token_t *token, lx
 {
     xmlNodePtr node;
    
-    if (node_stack_is_empty(ctx->stack)) {
-        return 0;
-    }
-
     node  = node_stack_pop(ctx->stack);
     if (node == NULL) {
         FAILED("unmatched element");
@@ -282,6 +279,10 @@ html5_parse_end_element(html5_parser_context_t *ctx, lxb_html_token_t *token, lx
         FAILED("start and end element name mismatch");
     }
  
+    if (node_stack_is_empty(ctx->stack)) {
+        return 0;
+    }
+
     int res = html5_parse_append_element(ctx, node);
     if (res < 0) {
         FAILED("unexpected end of document");
