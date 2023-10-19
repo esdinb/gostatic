@@ -45,14 +45,14 @@ This command takes as arguments a number of named transformations, a source path
 
 		wg := new(sync.WaitGroup)
 
-		runner := func() {
+		runner := func(ctx context.Context) {
 			logger.Println("rebuilding")
-			if err := section.Build(rootPath); err != nil {
+			if err := section.Build(ctx, rootPath); err != nil {
 				logger.Fatal(err)
 			}
 		}
 
-		runner()
+		runner(ctx)
 
 		if watchFiles {
 			watchCtx, _ := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)

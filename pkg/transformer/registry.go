@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"context"
+	"fmt"
 )
 
 type Status int
@@ -15,14 +16,19 @@ type contextKey struct {
 	name string
 }
 
-func (k *contextKey) String() string { return "gostatic transform context key " + k.name }
+func (k *contextKey) String() string {
+	return fmt.Sprintf("transform context key %s\n", k.name)
+}
 
 var InPathContextKey = contextKey{"inpath"}
 var OutPathContextKey = contextKey{"outpath"}
 var RootPathContextKey = contextKey{"rootpath"}
+var InFileContextKey = contextKey{"infilepath"}
+var OutFileContextKey = contextKey{"outfilepath"}
 var DocumentContextKey = contextKey{"documentpath"}
 var ParamsContextKey = contextKey{"paramspath"}
 var StringParamsContextKey = contextKey{"strparamspath"}
+var FormatterContextKey = contextKey{"formatterpath"}
 
 type TransformerFunc func(context.Context, []string) (context.Context, Status, error)
 

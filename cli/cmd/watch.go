@@ -98,7 +98,7 @@ func collectInputPaths(buildPath string) ([]string, error) {
 	return inputPaths, nil
 }
 
-func runWatcher(ctx context.Context, wg *sync.WaitGroup, filePaths []string, matchPatterns []string, buildFunc func()) {
+func runWatcher(ctx context.Context, wg *sync.WaitGroup, filePaths []string, matchPatterns []string, buildFunc func(context.Context)) {
 	var (
 		watcher *fsnotify.Watcher
 		rebuild bool
@@ -168,7 +168,7 @@ func runWatcher(ctx context.Context, wg *sync.WaitGroup, filePaths []string, mat
 
 			if rebuild {
 				logger.Println("change", event.Name)
-				buildFunc()
+				buildFunc(ctx)
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {
@@ -210,7 +210,7 @@ A project directory is a directory with a build.yaml file.
 		}
 
 		wg.Add(1)
-		go runWatcher(watchCtx, wg, inputPaths, []string{}, func() {
+		go runWatcher(watchCtx, wg, inputPaths, []string{}, func(ctx context.Context) {
 			buildCtx, _ := context.WithCancel(watchCtx)
 			wg.Add(1)
 			runBuild(buildCtx, wg, buildPath)

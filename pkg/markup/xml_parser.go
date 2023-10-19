@@ -169,14 +169,6 @@ func ParseDTD(ExternalID string, SystemID string) *Dtd {
 	return makeDtd(cdtd)
 }
 
-// xmlParseDoc
-func ParseDoc(cur string) *Document {
-	ptr := C.CString(cur)
-	defer C.free_string(ptr)
-	doc := C.xmlParseDoc(C.to_xmlcharptr(ptr))
-	return makeDoc(doc)
-}
-
 // xmlParseDocument
 func (p *Parser) Parse() int {
 	return int(C.xmlParseDocument(p.Ptr))
@@ -210,20 +202,6 @@ func ParseEntity(filename string) *Document {
 	return makeDoc(doc)
 }
 
-// xmlParseFile
-func ParseFile(filename string) *Document {
-	ptr := C.CString(filename)
-	defer C.free_string(ptr)
-	doc := C.xmlParseFile(ptr)
-	return makeDoc(doc)
-}
-
-// xmlParseMemory
-func ParseMemory(buffer []byte) *Document {
-	doc := C.xmlParseMemory((*C.char)(unsafe.Pointer(&buffer[0])), C.int(len(buffer)))
-	return makeDoc(doc)
-}
-
 // xmlReadDoc
 func ReadDoc(input string, url string, encoding string, options ParserOption) *Document {
 	ptri := C.CString(input)
@@ -253,28 +231,6 @@ func ReadMemory(buffer []byte, url string, encoding string, options ParserOption
 	ptre := C.CString(encoding)
 	defer C.free_string(ptre)
 	doc := C.xmlReadMemory((*C.char)(unsafe.Pointer(&buffer[0])), C.int(len(buffer)), ptru, ptre, C.int(options))
-	return makeDoc(doc)
-}
-
-// xmlRecoverDoc
-func RecoverDoc(cur string) *Document {
-	ptr := C.CString(cur)
-	defer C.free_string(ptr)
-	doc := C.xmlRecoverDoc(C.to_xmlcharptr(ptr))
-	return makeDoc(doc)
-}
-
-// xmlRecoverFile
-func RecoverFile(filename string) *Document {
-	ptr := C.CString(filename)
-	defer C.free_string(ptr)
-	doc := C.xmlRecoverFile(ptr)
-	return makeDoc(doc)
-}
-
-// xmlRecoverMemory
-func RecoverMemory(buffer []byte) *Document {
-	doc := C.xmlRecoverMemory((*C.char)(unsafe.Pointer(&buffer[0])), C.int(len(buffer)))
 	return makeDoc(doc)
 }
 

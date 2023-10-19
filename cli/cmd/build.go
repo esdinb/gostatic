@@ -78,7 +78,7 @@ func runBuild(ctx context.Context, wg *sync.WaitGroup, buildPath string) {
 	logger.Println("rebuilding...")
 	for i := range config {
 		section := config[i]
-		err := section.Build(rootPath)
+		err := section.Build(ctx, rootPath)
 		if err != nil {
 			logger.Println("build error:", err)
 		}
@@ -123,13 +123,13 @@ var buildCmd = &cobra.Command{
 				logger.Fatal(err)
 			}
 
-			runner := func() {
-				buildCtx, _ := context.WithCancel(watchCtx)
+			runner := func(ctx context.Context) {
+				buildCtx, _ := context.WithCancel(ctx)
 
 				wg.Add(1)
 				runBuild(buildCtx, wg, buildPath)
 			}
-			runner()
+			runner(watchCtx)
 
 			wg.Add(1)
 			go runWatcher(watchCtx, wg, inputPaths, []string{}, runner)

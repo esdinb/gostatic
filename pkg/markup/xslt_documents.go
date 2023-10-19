@@ -7,10 +7,6 @@ package markup
 #include <libxslt/documents.h>
 #include "xslt_loader.h"
 
-static inline void free_string(char* s) { free(s); }
-static inline void free_xmlstring(xmlChar* s) { free(s); }
-static inline xmlChar *to_xmlcharptr(const char *s) { return (xmlChar *)s; }
-static inline char *to_charptr(const xmlChar *s) { return (char *)s; }
 */
 import "C"
 import "unsafe"
@@ -35,7 +31,7 @@ func makeDocLoaderContext(ptr unsafe.Pointer) *DocLoaderContext {
 
 //export go_loader_callback
 func go_loader_callback(uri *C.xmlChar, dict C.xmlDictPtr, options C.int, ctxt unsafe.Pointer, loadType C.xsltLoadType) C.xmlDocPtr {
-	doc := loader(C.GoString(C.to_charptr(uri)), makeDict(dict), ParserOption(options), makeDocLoaderContext(ctxt), LoadType(loadType))
+	doc := loader(C.GoString((*C.char)(unsafe.Pointer(uri))), makeDict(dict), ParserOption(options), makeDocLoaderContext(ctxt), LoadType(loadType))
 	if doc == nil {
 		return nil
 	}
@@ -44,7 +40,7 @@ func go_loader_callback(uri *C.xmlChar, dict C.xmlDictPtr, options C.int, ctxt u
 
 func DefaultLoader(uri string, dict *Dict, options ParserOption, ctxt *DocLoaderContext, loadType LoadType) *Document {
 	curi := C.CString(uri)
-	defer C.free_string(curi)
+	defer C.free(unsafe.Pointer(curi))
 	var cdict C.xmlDictPtr
 	if dict == nil {
 		cdict = nil
@@ -57,7 +53,7 @@ func DefaultLoader(uri string, dict *Dict, options ParserOption, ctxt *DocLoader
 	} else {
 		cctxt = ctxt.Ptr
 	}
-	ptr := C.default_loader(C.to_xmlcharptr(curi), cdict, C.int(options), cctxt, (C.xsltLoadType)(loadType))
+	ptr := C.default_loader((*C.xmlChar)(unsafe.Pointer(curi)), cdict, C.int(options), cctxt, (C.xsltLoadType)(loadType))
 	return makeDoc(ptr)
 }
 

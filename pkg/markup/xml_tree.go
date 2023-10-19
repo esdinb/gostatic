@@ -1,6 +1,6 @@
 // Package markup is a wrapper around libxml2, libxslt and lexbor html5 parser
 //
-// libxml2 wrappers are based on and mostly incorporated rom jbussdiekers golibxml
+// libxml2 wrappers are based on and mostly incorporated from jbussdiekers golibxml
 //
 // https://github.com/jbussdieker/golibxml
 package markup
@@ -8,6 +8,7 @@ package markup
 /*
 #cgo pkg-config: libxml-2.0
 #include <libxml/tree.h>
+#include <libxml/xinclude.h>
 
 static inline void free_string(char* s) { free(s); }
 static inline void free_xmlstring(xmlChar* s) { free(s); }
@@ -606,6 +607,11 @@ func RemoveAttribute(attr *Attribute) int {
 // xmlReplaceNode
 func (old *Node) Replace(cur *Node) *Node {
 	return makeNode(C.xmlReplaceNode(old.Ptr, cur.Ptr))
+}
+
+// xmlXIncludeProcessFlags
+func (doc *Document) ProcessXInclude(flags ParserOption) int {
+	return int(C.xmlXIncludeProcessFlags(doc.Ptr, C.int(flags)))
 }
 
 // xmlSaveFile

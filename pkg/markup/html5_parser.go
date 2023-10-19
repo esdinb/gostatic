@@ -8,6 +8,8 @@ package markup
 */
 import "C"
 import (
+	"os"
+
 	"github.com/CannibalVox/cgoalloc"
 )
 
@@ -58,4 +60,33 @@ func (p *HTML5Parser) MyDoc() *Document {
 		return makeDoc(ptrd)
 	}
 	return nil
+}
+
+func ReadHTMLFile(srcPath string, options ParserOption) *Document {
+	parser := CreateHTML5Parser(
+		NewDoc("1.0"),
+		nil,
+	)
+	if parser == nil {
+		return nil
+	}
+	defer parser.Free()
+
+	var chunk string
+	if data, err := os.ReadFile(srcPath); err != nil {
+		return nil
+	} else {
+		chunk = string(data)
+	}
+	if res := parser.ParseChunk(chunk); res < 0 {
+		return nil
+	}
+	if res := parser.Terminate(); res < 0 {
+		return nil
+	}
+
+	doc := parser.MyDoc()
+	_ = doc.ProcessXInclude(options)
+
+	return doc
 }
