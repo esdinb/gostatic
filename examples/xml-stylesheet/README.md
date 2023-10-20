@@ -11,7 +11,7 @@ When building like this: `gostatic build`, the XSL stylesheet is extracted from 
 
 The build pipeline in `build.yaml` also contains the `template:style.xsl` transformation.
 
-The `style.xsl` stylesheet is applied to the input html file by putting the stylesheet path in the transformation name.
+The `style.xsl` stylesheet is applied to the input html file by putting a path to the stylesheet in the transformation name.
 
 Alle paths are relative to the build root (the directory where build.yaml is located).
 
