@@ -2,14 +2,14 @@ package markup
 
 /*
 #cgo pkg-config: libxslt
-#cgo pkg-config: libexslt
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 #include <libxslt/transform.h>
 #include <libxslt/variables.h>
 #include <libxslt/xsltutils.h>
-#include <libexslt/exslt.h>
+#include <libxslt/extensions.h>
 #include "xslt_transform.h"
+#include "xslt_extensions.h"
 
 */
 import "C"
@@ -61,6 +61,7 @@ func ApplyStylesheetUser(style *Stylesheet, doc *Document, params []string, strp
 	// https://mail.gnome.org/archives/xslt/2009-December/msg00002.html
 	if ctx := C.xsltNewTransformContext(style.Ptr, doc.Ptr); ctx != nil {
 		defer C.xsltFreeTransformContext(ctx)
+		C.registerExtensionFunctions(ctx)
 		C.xsltSetCtxtParseOptions(ctx, XSLT_PARSE_OPTIONS)
 		if C.xsltQuoteUserParams(ctx, cstrparams) != -1 {
 			if ptr := C.xsltApplyStylesheetUser(style.Ptr, doc.Ptr, cparams, nil, nil, ctx); ptr != nil {
@@ -70,9 +71,4 @@ func ApplyStylesheetUser(style *Stylesheet, doc *Document, params []string, strp
 	}
 
 	return nil
-}
-
-func init() {
-	C.exsltCommonRegister()
-	C.exsltDateRegister()
 }
