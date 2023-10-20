@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"context"
+	"errors"
 	"gostatic/pkg/markup"
 	"strings"
 
@@ -22,7 +23,10 @@ func TransformBanner(ctx context.Context, args []string) (context.Context, Statu
 		text = strings.Join(args[1:], "")
 	}
 	banner := figure.NewFigure(text, font, true).String()
-	document := ctx.Value(DocumentContextKey).(*markup.Document)
+	document, ok := ctx.Value(DocumentContextKey).(*markup.Document)
+	if !ok {
+		return ctx, Continue, errors.New("missing input document")
+	}
 	comment := document.NewComment("\n" + banner + "\n\n")
 	document.FirstChild().AddPrevSibling(comment)
 	return ctx, Continue, nil
