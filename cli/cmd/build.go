@@ -118,11 +118,6 @@ var buildCmd = &cobra.Command{
 		if watchFiles || serveFiles {
 			watchCtx, _ := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 
-			inputPaths, err := collectInputPaths(buildPath)
-			if err != nil {
-				logger.Fatal(err)
-			}
-
 			runner := func(ctx context.Context) {
 				buildCtx, _ := context.WithCancel(ctx)
 
@@ -130,6 +125,11 @@ var buildCmd = &cobra.Command{
 				runBuild(buildCtx, wg, buildPath)
 			}
 			runner(watchCtx)
+
+			inputPaths, err := collectInputPaths(buildPath)
+			if err != nil {
+				logger.Fatal(err)
+			}
 
 			wg.Add(1)
 			go runWatcher(watchCtx, wg, inputPaths, []string{}, runner)
