@@ -8,10 +8,6 @@ xmlNode* fetchNode(xmlNodeSet *nodeset, int index) {
   	return nodeset->nodeTab[index];
 }
 
-static inline void free_string(char* s) { free(s); }
-static inline xmlChar *to_xmlcharptr(const char *s) { return (xmlChar *)s; }
-static inline char *to_charptr(const xmlChar *s) { return (char *)s; }
-
 */
 import "C"
 import (
@@ -33,6 +29,8 @@ type XPathContext struct {
 type XPathObject struct {
 	Ptr C.xmlXPathObjectPtr
 }
+
+type XPathFunction = func(C.xmlXPathParserContextPtr, C.int)
 
 type NodeSet struct {
 	Ptr C.xmlNodeSetPtr
@@ -95,14 +93,14 @@ func (obj *XPathObject) CastToNumber() float32 {
 func (obj *XPathObject) String() string {
 	cstr := C.xmlXPathCastToString(obj.Ptr)
 	defer C.free(unsafe.Pointer(cstr))
-	return C.GoString(C.to_charptr(cstr))
+	return C.GoString((*C.char)(unsafe.Pointer(cstr)))
 }
 
 // xmlXPathCompile
 func CompileXPath(str string) *XPath {
 	ptr := C.CString(str)
-	defer C.free_string(ptr)
-	return makeXpath(C.xmlXPathCompile(C.to_xmlcharptr(ptr)))
+	defer C.free(unsafe.Pointer(ptr))
+	return makeXpath(C.xmlXPathCompile((*C.xmlChar)(unsafe.Pointer(ptr))))
 }
 
 // xmlXPathConvertBoolean
@@ -154,15 +152,15 @@ func (obj *XPathObject) Results() []*Node {
 // xmlXPathCtxtCompile
 func (ctx *XPathContext) Compile(str string) *XPath {
 	ptr := C.CString(str)
-	defer C.free_string(ptr)
-	return makeXpath(C.xmlXPathCtxtCompile(ctx.Ptr, C.to_xmlcharptr(ptr)))
+	defer C.free(unsafe.Pointer(ptr))
+	return makeXpath(C.xmlXPathCtxtCompile(ctx.Ptr, (*C.xmlChar)(unsafe.Pointer(ptr))))
 }
 
 // xmlXPathEval
 func (ctx *XPathContext) Eval(str string) *XPathObject {
 	ptr := C.CString(str)
-	defer C.free_string(ptr)
-	return makeXpathObj(C.xmlXPathEval(C.to_xmlcharptr(ptr), ctx.Ptr))
+	defer C.free(unsafe.Pointer(ptr))
+	return makeXpathObj(C.xmlXPathEval((*C.xmlChar)(unsafe.Pointer(ptr)), ctx.Ptr))
 }
 
 // xmlXPathEvalPredicate
@@ -174,8 +172,8 @@ func (ctx *XPathContext) EvalPredicate(res *XPathObject) bool {
 // xmlXPathEvalExpression
 func (ctx *XPathContext) EvalExpression(str string) *XPathObject {
 	ptr := C.CString(str)
-	defer C.free_string(ptr)
-	return makeXpathObj(C.xmlXPathEvalExpression(C.to_xmlcharptr(ptr), ctx.Ptr))
+	defer C.free(unsafe.Pointer(ptr))
+	return makeXpathObj(C.xmlXPathEvalExpression((*C.xmlChar)(unsafe.Pointer(ptr)), ctx.Ptr))
 }
 
 // xmlXPathFreeCompExpr
