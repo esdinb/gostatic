@@ -2,11 +2,13 @@ package markup
 
 /*
 #cgo pkg-config: libxslt
+#cgo pkg-config: libexslt
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 #include <libxslt/transform.h>
 #include <libxslt/variables.h>
 #include <libxslt/xsltutils.h>
+#include <libexslt/exslt.h>
 #include "xslt_transform.h"
 
 */
@@ -34,7 +36,15 @@ func (t *TransformContext) Free() {
 	C.xsltFreeTransformContext(t.Ptr)
 }
 
-func ApplyStylesheet(style *Stylesheet, doc *Document, params []string, strparams []string) *Document {
+func ApplyStylesheet(style *Stylesheet, doc *Document) *Document {
+	if ptr := C.xsltApplyStylesheet(style.Ptr, doc.Ptr, nil); ptr != nil {
+		return makeDoc(ptr)
+	}
+
+	return nil
+}
+
+func ApplyStylesheetUser(style *Stylesheet, doc *Document, params []string, strparams []string) *Document {
 
 	cparams := C.makeParamsArray(C.int(len(params) + 1))
 	defer C.freeParamsArray(cparams, C.int(len(params)+1))
@@ -60,4 +70,9 @@ func ApplyStylesheet(style *Stylesheet, doc *Document, params []string, strparam
 	}
 
 	return nil
+}
+
+func init() {
+	C.exsltCommonRegister()
+	C.exsltDateRegister()
 }

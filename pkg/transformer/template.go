@@ -59,7 +59,7 @@ func TransformTemplate(ctx context.Context, args []string) (context.Context, Sta
 		return ctx, Continue, errors.New("missing strparams array")
 	}
 
-	transformation := markup.ApplyStylesheet(style, document, params, strparams)
+	transformation := markup.ApplyStylesheetUser(style, document, params, strparams)
 	if transformation == nil {
 		return ctx, Continue, errors.New("error applying stylesheet")
 	} else {
