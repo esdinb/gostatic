@@ -83,7 +83,7 @@ func TransformBundle(ctx context.Context, args []string) (context.Context, Statu
 	defer xpath.Free()
 
 	styleElements := xpath.Eval("//style")
-	for node := range styleElements.Results() {
+	for _, node := range styleElements.Results() {
 		stdinOptions := api.StdinOptions{
 			Contents:   node.GetContent(),
 			ResolveDir: rootPath,
@@ -99,7 +99,7 @@ func TransformBundle(ctx context.Context, args []string) (context.Context, Statu
 	linkElements = xpath.Eval("/html/head/link[@rel='stylesheet' and @href and string-length(@href) != 0]")
 	linkPaths := []string{}
 	var linkNode *markup.Node
-	for node := range linkElements.Results() {
+	for _, node := range linkElements.Results() {
 		linkPath := node.GetAttribute("href")
 		linkPaths = append(linkPaths, linkPath)
 		if linkNode != nil {
@@ -108,7 +108,7 @@ func TransformBundle(ctx context.Context, args []string) (context.Context, Statu
 			linkNode = node
 		}
 		preloadLinkElements := xpath.Eval(fmt.Sprintf("/html/head/link[@rel='preload' and @href='%s']", linkPath))
-		for preloadNode := range preloadLinkElements.Results() {
+		for _, preloadNode := range preloadLinkElements.Results() {
 			preloadNode.Unlink()
 		}
 		if linkNode != nil && len(linkPaths) > 0 {
@@ -119,7 +119,7 @@ func TransformBundle(ctx context.Context, args []string) (context.Context, Statu
 	}
 
 	linkElements = xpath.Eval("/html/body/link[@rel='stylesheet' and @href and string-length(@href) != 0]")
-	for node := range linkElements.Results() {
+	for _, node := range linkElements.Results() {
 		linkPath := node.GetAttribute("href")
 		result := bundle([]string{linkPath}, rootPath, cssLoaders)
 		newNode := document.NewNode(nil, "style", result)
@@ -131,7 +131,7 @@ func TransformBundle(ctx context.Context, args []string) (context.Context, Statu
 	scriptElements = xpath.Eval("/html/head/script[@src and string-length(@src) != 0 and @type='module']")
 	scriptPaths := []string{}
 	var scriptNode *markup.Node
-	for node := range scriptElements.Results() {
+	for _, node := range scriptElements.Results() {
 		srcAttr := node.HasAttribute("src")
 		scriptPath := srcAttr.Children().String()
 		scriptPaths = append(scriptPaths, scriptPath)
@@ -141,7 +141,7 @@ func TransformBundle(ctx context.Context, args []string) (context.Context, Statu
 			scriptNode = node
 		}
 		preloadScriptElements := xpath.Eval(fmt.Sprintf("/html/head/link[@rel='preload' and @href='%s']", scriptPath))
-		for preloadNode := range preloadScriptElements.Results() {
+		for _, preloadNode := range preloadScriptElements.Results() {
 			preloadNode.Unlink()
 		}
 		if scriptNode != nil && len(scriptPaths) > 0 {
@@ -152,7 +152,7 @@ func TransformBundle(ctx context.Context, args []string) (context.Context, Statu
 	}
 
 	scriptElements = xpath.Eval("/html/body/script[@src and string-length(@src) != 0 and @type='module']")
-	for node := range scriptElements.Results() {
+	for _, node := range scriptElements.Results() {
 		srcAttr := node.HasAttribute("src")
 		scriptPath := srcAttr.Children().String()
 		result := bundle([]string{scriptPath}, rootPath, jsLoaders)
@@ -161,7 +161,7 @@ func TransformBundle(ctx context.Context, args []string) (context.Context, Statu
 	}
 
 	scriptElements = xpath.Eval("//script[@src and string-length(@src) != 0 and not(@type)]")
-	for node := range scriptElements.Results() {
+	for _, node := range scriptElements.Results() {
 		srcAttr := node.HasAttribute("src")
 		scriptPath := srcAttr.Children().String()
 		if strings.HasPrefix(scriptPath, "/") {

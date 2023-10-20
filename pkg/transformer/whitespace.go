@@ -13,7 +13,7 @@ func normalizeWhitespace(doc *markup.Document) {
 	whiteSpaceElements := xpath.Eval("////text()[not(normalize-space())]")
 	if whiteSpaceElements != nil {
 		defer whiteSpaceElements.Free()
-		for node := range whiteSpaceElements.Results() {
+		for _, node := range whiteSpaceElements.Results() {
 			node.Unlink()
 		}
 	}

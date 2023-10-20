@@ -26,7 +26,7 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 
 	defer markdownFiles.Free()
 
-	for node := range markdownFiles.Results() {
+	for _, node := range markdownFiles.Results() {
 		var (
 			path       string
 			absPath    string

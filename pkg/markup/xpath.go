@@ -14,7 +14,9 @@ static inline char *to_charptr(const xmlChar *s) { return (char *)s; }
 
 */
 import "C"
-import "unsafe"
+import (
+	"unsafe"
+)
 
 ////////////////////////////////////////////////////////////////////////////////
 // TYPES/STRUCTS
@@ -118,7 +120,7 @@ func (obj *XPathObject) ConvertString() *XPathObject {
 	return makeXpathObj(C.xmlXPathConvertString(obj.Ptr))
 }
 
-func (obj *XPathObject) Results() chan *Node {
+func (obj *XPathObject) ResultsChannel() chan *Node {
 	channel := make(chan *Node)
 	go func(obj *XPathObject, channel chan *Node) {
 		if obj.Ptr._type != 1 {
@@ -131,6 +133,22 @@ func (obj *XPathObject) Results() chan *Node {
 		close(channel)
 	}(obj, channel)
 	return channel
+}
+
+func (obj *XPathObject) Results() []*Node {
+	var (
+		results []*Node
+		length  int
+	)
+	if obj.Ptr._type != 1 {
+		return []*Node{}
+	}
+	length = int(obj.Ptr.nodesetval.nodeNr)
+	results = make([]*Node, length)
+	for i := 0; i < length; i++ {
+		results[i] = makeNode(C.fetchNode(obj.Ptr.nodesetval, C.int(i)))
+	}
+	return results
 }
 
 // xmlXPathCtxtCompile
