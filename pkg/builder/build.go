@@ -131,6 +131,7 @@ func htmlFormatter(ctx context.Context) error {
 		doc     *markup.Document
 		outFile *os.File
 		ok      bool
+		err     error
 	)
 
 	options = markup.SaveOption(markup.XML_SAVE_NO_DECL | markup.XML_SAVE_NO_EMPTY | markup.XML_SAVE_AS_XML)
@@ -146,7 +147,6 @@ func htmlFormatter(ctx context.Context) error {
 		if !ok {
 			return errors.New("missing output file path for html formatter")
 		} else {
-			var err error
 			outFile, err = openFileForWriting(outPath)
 			if err != nil {
 				return err
@@ -225,18 +225,21 @@ func openFileForWriting(outPath string) (*os.File, error) {
 	}
 }
 
+func freeContextDocument(ctx context.Context) {
+	doc, ok := ctx.Value(transformer.DocumentContextKey).(*markup.Document)
+	if ok {
+		doc.Free()
+	}
+}
+
 func freeBuildContext(ctx context.Context) {
 	var (
-		doc     *markup.Document
 		inFile  *os.File
 		outFile *os.File
 		ok      bool
 	)
 
-	doc, ok = ctx.Value(transformer.DocumentContextKey).(*markup.Document)
-	if ok {
-		doc.Free()
-	}
+	freeContextDocument(ctx)
 
 	inFile, ok = ctx.Value(transformer.InFileContextKey).(*os.File)
 	if ok {
@@ -276,12 +279,12 @@ func NewBuildSection(in string, out string, pipeline Pipeline) BuildSection {
 func (p *Pipeline) Transform(ctx context.Context) (context.Context, error) {
 	var status transformer.Status
 	var err error
+
 	for _, command := range *p {
 		cmd := command.Parse()
 		fn := transformer.Registry.Lookup(cmd.Name)
 		if fn == nil {
 			return ctx, errors.New(fmt.Sprintf("unknown transform name: %s", cmd.Name))
-			continue
 		}
 		ctx, status, err = fn(ctx, cmd.Args)
 		if err != nil {
@@ -293,6 +296,7 @@ func (p *Pipeline) Transform(ctx context.Context) (context.Context, error) {
 			continue
 		}
 	}
+
 	return ctx, nil
 }
 
@@ -315,8 +319,9 @@ func (b *BuildSection) ProcessFile(ctx context.Context) error {
 
 func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 	var (
-		outFile *os.File = nil
-		err     error
+		outFile   *os.File      = nil
+		formatter FormatterFunc = nil
+		err       error
 	)
 	rootPathAbsolute, err := filepath.Abs(rootPath)
 	if err != nil {
@@ -337,7 +342,7 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 	if outPath == "-" {
 		outFile = os.Stdout
 		ctx = context.WithValue(ctx, transformer.OutFileContextKey, os.Stdout)
-		ctx = context.WithValue(ctx, transformer.FormatterContextKey, lookupFormatter(filepath.Ext(inPath)))
+		formatter = lookupFormatter(filepath.Ext(inPath))
 	} else {
 		if info, err := os.Stat(absPath); err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
@@ -355,8 +360,10 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 		} else if info.IsDir() {
 			outPathIsDir = true
 		}
-		formatter := lookupFormatter(filepath.Ext(outPath))
-		ctx = context.WithValue(ctx, transformer.FormatterContextKey, formatter)
+
+		if !outPathIsDir {
+			formatter = lookupFormatter(filepath.Ext(outPath))
+		}
 
 		outPath = absPath
 	}
@@ -366,12 +373,16 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 			reader   *bufio.Reader
 			readNext bool
 			bytes    []byte
-			err      error
 		)
+		if outPathIsDir {
+			return errors.New("cannot pipe to a directory")
+		}
+		if outFile != nil {
+			formatter = lookupFormatter(".xml")
+		}
 		reader = bufio.NewReader(os.Stdin)
 		readNext = true
 		for readNext {
-			buildCtx := ctx
 			bytes, err = reader.ReadBytes(0)
 			if err != nil {
 				if errors.Is(err, io.EOF) {
@@ -381,20 +392,19 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 				}
 			}
 			if len(bytes) > 0 {
-				if doc, ok := buildCtx.Value(transformer.DocumentContextKey).(*markup.Document); ok {
-					doc.Free()
-					if outFile != nil {
-						outFile.Write([]byte{0})
-					}
-				}
-				buildCtx = context.WithValue(
-					buildCtx,
+				buildCtx := context.WithValue(
+					ctx,
 					transformer.DocumentContextKey,
 					markup.ReadMemory(bytes, b.In, "UTF-8", parseOptions),
 				)
+				buildCtx = context.WithValue(buildCtx, transformer.FormatterContextKey, formatter)
 				err = b.ProcessFile(buildCtx)
+				freeContextDocument(buildCtx)
 				if err != nil {
 					return err
+				}
+				if outFile != nil && readNext {
+					outFile.Write([]byte{0})
 				}
 			}
 		}
@@ -412,23 +422,27 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 			} else if info.IsDir() {
 				continue
 			}
-			if outPathIsDir {
+			if outFile != nil {
+				formatter = lookupFormatter(filepath.Ext(inPath))
+			} else if outPathIsDir {
 				if relPath, err := filepath.Rel(rootPath, inPath); err != nil {
 					return err
 				} else {
 					outPath = filepath.Join(absPath, relPath)
 				}
+				formatter = lookupFormatter(filepath.Ext(outPath))
 			}
-			ctx = context.WithValue(ctx, transformer.InPathContextKey, inPath)
-			ctx = context.WithValue(ctx, transformer.OutPathContextKey, outPath)
+			buildCtx := context.WithValue(ctx, transformer.InPathContextKey, inPath)
+			buildCtx = context.WithValue(buildCtx, transformer.OutPathContextKey, outPath)
+			buildCtx = context.WithValue(buildCtx, transformer.FormatterContextKey, formatter)
 			loader := lookupLoader(filepath.Ext(inPath))
-			ctx, err = loader(ctx)
+			buildCtx, err = loader(buildCtx)
 			if err != nil {
 				return err
 			}
 
-			err = b.ProcessFile(ctx)
-			freeBuildContext(ctx)
+			err = b.ProcessFile(buildCtx)
+			freeContextDocument(buildCtx)
 			if err != nil {
 				return err
 			}
