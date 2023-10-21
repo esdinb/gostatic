@@ -15,7 +15,7 @@ CGO wrappers for libxml2 are based on [jbussdiekers golibxml](https://github.com
 
 ## Requirements
 
-Requires Go version 1.18 or later.
+Requires Go version 1.21 or later.
 
 The libxml2 and libxslt libraries needs to be installed on the system.
 
