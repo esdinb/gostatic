@@ -46,5 +46,6 @@ func FormatDateCallback(ctx C.xmlXPathParserContextPtr, nArgs C.int) {
 
 func init() {
 	C.exsltCommonRegister()
+	C.exsltFuncRegister()
 	C.exsltStrRegister()
 }
