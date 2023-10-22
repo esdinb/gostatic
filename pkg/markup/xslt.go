@@ -1,7 +1,6 @@
 package markup
 
 /*
-#cgo pkg-config: libxslt
 #include <libxslt/xslt.h>
 #include <libxslt/xsltInternals.h>
 

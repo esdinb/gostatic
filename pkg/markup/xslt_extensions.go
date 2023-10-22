@@ -1,9 +1,6 @@
 package markup
 
 /*
-#cgo pkg-config: libxml-2.0
-#cgo pkg-config: libxslt
-#cgo pkg-config: libexslt
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>

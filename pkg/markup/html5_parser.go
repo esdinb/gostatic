@@ -1,7 +1,6 @@
 package markup
 
 /*
-#cgo pkg-config: libxml-2.0
 #include <libxml/tree.h>
 #include "html5_parser.h"
 

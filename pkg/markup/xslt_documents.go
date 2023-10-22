@@ -1,8 +1,6 @@
 package markup
 
 /*
-#cgo pkg-config: libxml-2.0
-#cgo pkg-config: libxslt
 #include <libxml/parser.h>
 #include <libxslt/documents.h>
 #include "xslt_loader.h"

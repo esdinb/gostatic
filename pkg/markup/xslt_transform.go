@@ -1,7 +1,6 @@
 package markup
 
 /*
-#cgo pkg-config: libxslt
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 #include <libxslt/transform.h>

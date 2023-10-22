@@ -1,7 +1,6 @@
 package markup
 
 /*
-#cgo pkg-config: libxml-2.0
 #include <libxml/xmlsave.h>
 #include "xml_save.h"
 
