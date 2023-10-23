@@ -1,6 +1,7 @@
 package markup
 
 /*
+#include <stdlib.h>
 #include <libxml/parser.h>
 */
 import "C"
