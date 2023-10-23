@@ -2,10 +2,6 @@ package markup
 
 /*
 #include <libxml/parser.h>
-
-static inline void free_string(char* s) { free(s); }
-static inline xmlChar *to_xmlcharptr(const char *s) { return (xmlChar *)s; }
-static inline char *to_charptr(const xmlChar *s) { return (char *)s; }
 */
 import "C"
 import "unsafe"
@@ -77,17 +73,17 @@ func (p *Parser) Clear() {
 // xmlCreateDocParserCtxt
 func CreateDocParser(cur string) *Parser {
 	ptr := C.CString(cur)
-	defer C.free_string(ptr)
-	cparser := C.xmlCreateDocParserCtxt(C.to_xmlcharptr(ptr))
+	defer C.free(unsafe.Pointer(ptr))
+	cparser := C.xmlCreateDocParserCtxt((*C.xmlChar)(unsafe.Pointer(ptr)))
 	return makeParser(cparser)
 }
 
 // xmlCreatePushParserCtxt
 func CreatePushParser(chunk string, filename string) *Parser {
 	ptrc := C.CString(chunk)
-	defer C.free_string(ptrc)
+	defer C.free(unsafe.Pointer(ptrc))
 	ptrf := C.CString(filename)
-	defer C.free_string(ptrf)
+	defer C.free(unsafe.Pointer(ptrf))
 	// first two arguments is a SAX handler and a pointer to user data
 	cparser := C.xmlCreatePushParserCtxt(nil, nil, (*C.char)(ptrc), C.int(len(chunk)), (*C.char)(ptrf))
 	return makeParser(cparser)
@@ -96,12 +92,12 @@ func CreatePushParser(chunk string, filename string) *Parser {
 // xmlCtxtReadDoc
 func (p *Parser) ReadDoc(input string, url string, encoding string, options ParserOption) *Document {
 	ptri := C.CString(input)
-	defer C.free_string(ptri)
+	defer C.free(unsafe.Pointer(ptri))
 	ptru := C.CString(url)
-	defer C.free_string(ptru)
+	defer C.free(unsafe.Pointer(ptru))
 	ptre := C.CString(encoding)
-	defer C.free_string(ptre)
-	doc := C.xmlCtxtReadDoc(p.Ptr, C.to_xmlcharptr(ptri), ptru, ptre, C.int(options))
+	defer C.free(unsafe.Pointer(ptre))
+	doc := C.xmlCtxtReadDoc(p.Ptr, (*C.xmlChar)(unsafe.Pointer(ptri)), ptru, ptre, C.int(options))
 	return makeDoc(doc)
 }
 
@@ -129,10 +125,10 @@ func NewParser() *Parser {
 // xmlParseDTD
 func ParseDTD(ExternalID string, SystemID string) *Dtd {
 	ptre := C.CString(ExternalID)
-	defer C.free_string(ptre)
+	defer C.free(unsafe.Pointer(ptre))
 	ptrs := C.CString(SystemID)
-	defer C.free_string(ptrs)
-	cdtd := C.xmlParseDTD(C.to_xmlcharptr(ptre), C.to_xmlcharptr(ptrs))
+	defer C.free(unsafe.Pointer(ptrs))
+	cdtd := C.xmlParseDTD((*C.xmlChar)(unsafe.Pointer(ptre)), (*C.xmlChar)(unsafe.Pointer(ptrs)))
 	return makeDtd(cdtd)
 }
 
@@ -144,13 +140,13 @@ func (p *Parser) Parse() int {
 // xmlParseChunk
 func (p *Parser) ParseChunk(chunk string) int {
 	ptr := C.CString(chunk)
-	defer C.free_string(ptr)
+	defer C.free(unsafe.Pointer(ptr))
 	return int(C.xmlParseChunk(p.Ptr, (*C.char)(ptr), C.int(len(chunk)), C.int(0)))
 }
 
 func (p *Parser) Terminate(chunk string) int {
 	ptr := C.CString(chunk)
-	defer C.free_string(ptr)
+	defer C.free(unsafe.Pointer(ptr))
 	return int(C.xmlParseChunk(p.Ptr, (*C.char)(ptr), C.int(len(chunk)), C.int(1)))
 }
 
@@ -161,32 +157,24 @@ func (p *Parser) MyDoc() *Document {
 	return nil
 }
 
-// xmlParseEntity
-func ParseEntity(filename string) *Document {
-	ptr := C.CString(filename)
-	defer C.free_string(ptr)
-	doc := C.xmlParseEntity(ptr)
-	return makeDoc(doc)
-}
-
 // xmlReadDoc
 func ReadDoc(input string, url string, encoding string, options ParserOption) *Document {
 	ptri := C.CString(input)
-	defer C.free_string(ptri)
+	defer C.free(unsafe.Pointer(ptri))
 	ptru := C.CString(url)
-	defer C.free_string(ptru)
+	defer C.free(unsafe.Pointer(ptru))
 	ptre := C.CString(encoding)
-	defer C.free_string(ptre)
-	doc := C.xmlReadDoc(C.to_xmlcharptr(ptri), ptru, ptre, C.int(options))
+	defer C.free(unsafe.Pointer(ptre))
+	doc := C.xmlReadDoc((*C.xmlChar)(unsafe.Pointer(ptri)), ptru, ptre, C.int(options))
 	return makeDoc(doc)
 }
 
 // xmlReadFile
 func ReadFile(filename string, encoding string, options ParserOption) *Document {
 	ptrf := C.CString(filename)
-	defer C.free_string(ptrf)
+	defer C.free(unsafe.Pointer(ptrf))
 	ptre := C.CString(encoding)
-	defer C.free_string(ptre)
+	defer C.free(unsafe.Pointer(ptre))
 	doc := C.xmlReadFile(ptrf, ptre, C.int(options))
 	return makeDoc(doc)
 }
@@ -194,9 +182,9 @@ func ReadFile(filename string, encoding string, options ParserOption) *Document 
 // xmlReadMemory
 func ReadMemory(buffer []byte, url string, encoding string, options ParserOption) *Document {
 	ptru := C.CString(url)
-	defer C.free_string(ptru)
+	defer C.free(unsafe.Pointer(ptru))
 	ptre := C.CString(encoding)
-	defer C.free_string(ptre)
+	defer C.free(unsafe.Pointer(ptre))
 	doc := C.xmlReadMemory((*C.char)(unsafe.Pointer(&buffer[0])), C.int(len(buffer)), ptru, ptre, C.int(options))
 	return makeDoc(doc)
 }
