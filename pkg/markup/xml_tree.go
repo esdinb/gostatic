@@ -388,7 +388,7 @@ func (node *Node) LastChild() *Node {
 // xmlGetNodePath
 func (node *Node) Path() string {
 	cstr := C.xmlGetNodePath(node.Ptr)
-	defer C.free((*C.xmlChar)(unsafe.Pointer(cstr)))
+	defer C.free(unsafe.Pointer(cstr))
 	return C.GoString((*C.char)(unsafe.Pointer(cstr)))
 }
 
