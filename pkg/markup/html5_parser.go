@@ -7,6 +7,7 @@ package markup
 */
 import "C"
 import (
+	"fmt"
 	"os"
 
 	"github.com/CannibalVox/cgoalloc"
@@ -16,6 +17,11 @@ type HTML5Parser struct {
 	Context   *C.html5_parser_context_t
 	Document  C.xmlDocPtr
 	Allocator *cgoalloc.ArenaAllocator
+}
+
+//export parserError
+func parserError(message *C.char) {
+	panic(fmt.Sprintf("html parser: %s", C.GoString(message)))
 }
 
 func CreateHTML5Parser(doc *Document, node *Node) *HTML5Parser {

@@ -3,14 +3,6 @@
 #include <lexbor/html/tokenizer.h>
 #include <lexbor/html/tag.h>
 
-#define FAILED(...)                                                            \
-    do {                                                                       \
-        fprintf(stderr, __VA_ARGS__);                                          \
-        fprintf(stderr, "\n");                                                 \
-        exit(EXIT_FAILURE);                                                    \
-    }                                                                          \
-    while (0)
-
 #define DEFAULT_STACK_CAPACITY 32
 #define MAX_STACK_CAPACITY 256
 
