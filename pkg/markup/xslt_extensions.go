@@ -1,13 +1,13 @@
 package markup
 
 /*
+#include <stdlib.h>
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 #include <libxslt/extensions.h>
 #include <libexslt/exslt.h>
 #include "xslt_extensions.h"
-
 */
 import "C"
 import (
