@@ -1,10 +1,10 @@
 package markup
 
 /*
+#include <stdlib.h>
 #include <libxml/parser.h>
 #include <libxslt/documents.h>
 #include "xslt_loader.h"
-
 */
 import "C"
 import "unsafe"
