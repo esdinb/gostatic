@@ -194,8 +194,3 @@ func ReadMemory(buffer []byte, url string, encoding string, options ParserOption
 func (p *Parser) Stop() {
 	C.xmlStopParser(p.Ptr)
 }
-
-// xmlSubstituteEntitiesDefault
-func SubstituteEntitiesDefault(val int) int {
-	return int(C.xmlSubstituteEntitiesDefault(C.int(val)))
-}
