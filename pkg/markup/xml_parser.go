@@ -194,3 +194,7 @@ func ReadMemory(buffer []byte, url string, encoding string, options ParserOption
 func (p *Parser) Stop() {
 	C.xmlStopParser(p.Ptr)
 }
+
+func init() {
+	C.xmlInitParser()
+}
