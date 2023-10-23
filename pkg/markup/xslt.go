@@ -1,11 +1,9 @@
 package markup
 
 /*
+#include <stdlib.h>
 #include <libxslt/xslt.h>
 #include <libxslt/xsltInternals.h>
-
-static inline xmlChar *to_xmlcharptr(const char *s) { return (xmlChar *)s; }
-
 */
 import "C"
 import "unsafe"
@@ -21,7 +19,7 @@ func (s *Stylesheet) Free() {
 func ParseStylesheetFile(filename string) *Stylesheet {
 	ptrf := C.CString(filename)
 	defer C.free(unsafe.Pointer(ptrf))
-	ptrs := C.xsltParseStylesheetFile(C.to_xmlcharptr(ptrf))
+	ptrs := C.xsltParseStylesheetFile((*C.xmlChar)(unsafe.Pointer(ptrf)))
 	return &Stylesheet{ptrs}
 }
 
