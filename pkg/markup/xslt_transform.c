@@ -1,6 +1,7 @@
 
 // https://groups.google.com/g/golang-nuts/c/pQueMFdY0mk/m/OAX5-Fqus0UJ
 
+#include <stdlib.h>
 #include "xslt_transform.h"
 
 char **makeParamsArray(int size) {
