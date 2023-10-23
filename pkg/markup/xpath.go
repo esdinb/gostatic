@@ -1,6 +1,7 @@
 package markup
 
 /*
+#include <stdlib.h>
 #include <libxml/xpath.h>
 
 xmlNode* fetchNode(xmlNodeSet *nodeset, int index) {
