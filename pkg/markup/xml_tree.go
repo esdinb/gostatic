@@ -6,13 +6,9 @@
 package markup
 
 /*
+#include <stdlib.h>
 #include <libxml/tree.h>
 #include <libxml/xinclude.h>
-
-static inline void free_string(char* s) { free(s); }
-static inline void free_xmlstring(xmlChar* s) { free(s); }
-static inline xmlChar *to_xmlcharptr(const char *s) { return (xmlChar *)s; }
-static inline char *to_charptr(const xmlChar *s) { return (char *)s; }
 */
 import "C"
 import (
@@ -181,13 +177,13 @@ func (buffer *Buffer) AddHead(str []byte) int {
 // xmlBufferCat/xmlBufferCCat
 func (buffer *Buffer) Cat(str string) int {
 	ptr := C.CString(str)
-	defer C.free_string(ptr)
+	defer C.free(unsafe.Pointer(ptr))
 	return int(C.xmlBufferCCat(buffer.Ptr, ptr))
 }
 
 // xmlBufferContent
 func (buffer *Buffer) Content() string {
-	return C.GoString(C.to_charptr(C.xmlBufferContent(buffer.Ptr)))
+	return C.GoString((*C.char)(unsafe.Pointer(C.xmlBufferContent(buffer.Ptr))))
 }
 
 // xmlBufferCreate
@@ -239,7 +235,7 @@ func (buffer *Buffer) Shrink(length int) int {
 // xmlBufferWriteChar/xmlBufferWriteCHAR
 func (buffer *Buffer) WriteChar(str string) {
 	ptr := C.CString(str)
-	defer C.free_string(ptr)
+	defer C.free(unsafe.Pointer(ptr))
 	C.xmlBufferWriteChar(buffer.Ptr, ptr)
 }
 
@@ -284,20 +280,20 @@ func (node *Node) CopyList() *Node {
 // xmlGetProp
 func (node *Node) GetAttribute(name string) string {
 	cname := C.CString(name)
-	defer C.free_string(cname)
-	cstr := C.xmlGetProp(node.Ptr, C.to_xmlcharptr(cname))
+	defer C.free(unsafe.Pointer(cname))
+	cstr := C.xmlGetProp(node.Ptr, (*C.xmlChar)(unsafe.Pointer(cname)))
 	if cstr == nil {
 		return ""
 	} else {
-		return C.GoString(C.to_charptr(cstr))
+		return C.GoString((*C.char)(unsafe.Pointer(cstr)))
 	}
 }
 
 // xmlHasProp
 func (node *Node) HasAttribute(name string) *Attribute {
 	cname := C.CString(name)
-	defer C.free_string(cname)
-	cattr := C.xmlHasProp(node.Ptr, C.to_xmlcharptr(cname))
+	defer C.free(unsafe.Pointer(cname))
+	cattr := C.xmlHasProp(node.Ptr, (*C.xmlChar)(unsafe.Pointer(cname)))
 	return makeAttribute(cattr)
 }
 
@@ -392,8 +388,8 @@ func (node *Node) LastChild() *Node {
 // xmlGetNodePath
 func (node *Node) Path() string {
 	cstr := C.xmlGetNodePath(node.Ptr)
-	defer C.free_xmlstring(cstr)
-	return C.GoString(C.to_charptr(cstr))
+	defer C.free((*C.xmlChar)(unsafe.Pointer(cstr)))
+	return C.GoString((*C.char)(unsafe.Pointer(cstr)))
 }
 
 // xmlLastElementChild
@@ -404,36 +400,36 @@ func (node *Node) LastElementChild() *Node {
 // xmlNewChild
 func (node *Node) NewChild(ns *Namespace, name string, content string) *Node {
 	ptrn := C.CString(name)
-	defer C.free_string(ptrn)
+	defer C.free(unsafe.Pointer(ptrn))
 	ptrc := C.CString(content)
-	defer C.free_string(ptrc)
+	defer C.free(unsafe.Pointer(ptrc))
 	if ns != nil {
-		return makeNode(C.xmlNewChild(node.Ptr, ns.Ptr, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptrc)))
+		return makeNode(C.xmlNewChild(node.Ptr, ns.Ptr, (*C.xmlChar)(unsafe.Pointer(ptrn)), (*C.xmlChar)(unsafe.Pointer(ptrc))))
 	}
-	return makeNode(C.xmlNewChild(node.Ptr, nil, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptrc)))
+	return makeNode(C.xmlNewChild(node.Ptr, nil, (*C.xmlChar)(unsafe.Pointer(ptrn)), (*C.xmlChar)(unsafe.Pointer(ptrc))))
 }
 
 // xmlNewComment
 func NewComment(content string) *Node {
 	ptr := C.CString(content)
-	defer C.free_string(ptr)
-	cnode := C.xmlNewComment(C.to_xmlcharptr(ptr))
+	defer C.free(unsafe.Pointer(ptr))
+	cnode := C.xmlNewComment((*C.xmlChar)(unsafe.Pointer(ptr)))
 	return makeNode(cnode)
 }
 
 // xmlNewDoc
 func NewDoc(version string) *Document {
 	ptr := C.CString(version)
-	defer C.free_string(ptr)
-	cdoc := C.xmlNewDoc(C.to_xmlcharptr(ptr))
+	defer C.free(unsafe.Pointer(ptr))
+	cdoc := C.xmlNewDoc((*C.xmlChar)(unsafe.Pointer(ptr)))
 	return makeDoc(cdoc)
 }
 
 // xmlNewDocComment
 func (doc *Document) NewComment(content string) *Node {
 	ptr := C.CString(content)
-	defer C.free_string(ptr)
-	return makeNode(C.xmlNewDocComment(doc.Ptr, C.to_xmlcharptr(ptr)))
+	defer C.free(unsafe.Pointer(ptr))
+	return makeNode(C.xmlNewDocComment(doc.Ptr, (*C.xmlChar)(unsafe.Pointer(ptr))))
 }
 
 // xmlNewDocFragment
@@ -444,102 +440,102 @@ func (doc *Document) NewFragment() *Node {
 // xmlNewDocNode
 func (doc *Document) NewNode(ns *Namespace, name string, content string) *Node {
 	ptrn := C.CString(name)
-	defer C.free_string(ptrn)
+	defer C.free(unsafe.Pointer(ptrn))
 	ptrc := C.CString(content)
-	defer C.free_string(ptrc)
+	defer C.free(unsafe.Pointer(ptrc))
 	if ns != nil {
-		return makeNode(C.xmlNewDocNode(doc.Ptr, ns.Ptr, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptrc)))
+		return makeNode(C.xmlNewDocNode(doc.Ptr, ns.Ptr, (*C.xmlChar)(unsafe.Pointer(ptrn)), (*C.xmlChar)(unsafe.Pointer(ptrc))))
 	}
-	return makeNode(C.xmlNewDocNode(doc.Ptr, nil, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptrc)))
+	return makeNode(C.xmlNewDocNode(doc.Ptr, nil, (*C.xmlChar)(unsafe.Pointer(ptrn)), (*C.xmlChar)(unsafe.Pointer(ptrc))))
 }
 
 // xmlNewDocProp
 func (doc *Document) NewProp(name string, value string) *Attribute {
 	ptrn := C.CString(name)
-	defer C.free_string(ptrn)
+	defer C.free(unsafe.Pointer(ptrn))
 	ptrv := C.CString(value)
-	defer C.free_string(ptrv)
-	cattr := C.xmlNewDocProp(doc.Ptr, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptrv))
+	defer C.free(unsafe.Pointer(ptrv))
+	cattr := C.xmlNewDocProp(doc.Ptr, (*C.xmlChar)(unsafe.Pointer(ptrn)), (*C.xmlChar)(unsafe.Pointer(ptrv)))
 	return makeAttribute(cattr)
 }
 
 // xmlNewDocRawNode
 func (doc *Document) NewRawNode(ns *Namespace, name string, content string) *Node {
 	ptrn := C.CString(name)
-	defer C.free_string(ptrn)
+	defer C.free(unsafe.Pointer(ptrn))
 	ptrc := C.CString(content)
-	defer C.free_string(ptrc)
+	defer C.free(unsafe.Pointer(ptrc))
 	if ns != nil {
-		return makeNode(C.xmlNewDocRawNode(doc.Ptr, ns.Ptr, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptrc)))
+		return makeNode(C.xmlNewDocRawNode(doc.Ptr, ns.Ptr, (*C.xmlChar)(unsafe.Pointer(ptrn)), (*C.xmlChar)(unsafe.Pointer(ptrc))))
 	}
-	return makeNode(C.xmlNewDocRawNode(doc.Ptr, nil, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptrc)))
+	return makeNode(C.xmlNewDocRawNode(doc.Ptr, nil, (*C.xmlChar)(unsafe.Pointer(ptrn)), (*C.xmlChar)(unsafe.Pointer(ptrc))))
 }
 
 // xmlNewDocText
 func (doc *Document) NewText(content string) *TextNode {
 	ptr := C.CString(content)
-	defer C.free_string(ptr)
-	return makeTextNode(C.xmlNewDocText(doc.Ptr, C.to_xmlcharptr(ptr)))
+	defer C.free(unsafe.Pointer(ptr))
+	return makeTextNode(C.xmlNewDocText(doc.Ptr, (*C.xmlChar)(unsafe.Pointer(ptr))))
 }
 
 // xmlNewDtd
 func (doc *Document) NewDtd(name string, ExternalID string, SystemID string) *Dtd {
 	ptrn := C.CString(name)
-	defer C.free_string(ptrn)
+	defer C.free(unsafe.Pointer(ptrn))
 	ptre := C.CString(ExternalID)
-	defer C.free_string(ptre)
+	defer C.free(unsafe.Pointer(ptre))
 	ptrs := C.CString(SystemID)
-	defer C.free_string(ptrs)
-	cdtd := C.xmlNewDtd(doc.Ptr, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptre), C.to_xmlcharptr(ptrs))
+	defer C.free(unsafe.Pointer(ptrs))
+	cdtd := C.xmlNewDtd(doc.Ptr, (*C.xmlChar)(unsafe.Pointer(ptrn)), (*C.xmlChar)(unsafe.Pointer(ptre)), (*C.xmlChar)(unsafe.Pointer(ptrs)))
 	return makeDtd(cdtd)
 }
 
 // xmlNewNode
 func NewNode(ns *Namespace, name string) *Node {
 	ptr := C.CString(name)
-	defer C.free_string(ptr)
+	defer C.free(unsafe.Pointer(ptr))
 	if ns != nil {
-		return makeNode(C.xmlNewNode(ns.Ptr, C.to_xmlcharptr(ptr)))
+		return makeNode(C.xmlNewNode(ns.Ptr, (*C.xmlChar)(unsafe.Pointer(ptr))))
 	}
-	return makeNode(C.xmlNewNode(nil, C.to_xmlcharptr(ptr)))
+	return makeNode(C.xmlNewNode(nil, (*C.xmlChar)(unsafe.Pointer(ptr))))
 }
 
 // xmlNewNs
 func (node *Node) NewNs(href string, prefix string) *Namespace {
 	ptrh := C.CString(href)
-	defer C.free_string(ptrh)
+	defer C.free(unsafe.Pointer(ptrh))
 	ptrp := C.CString(prefix)
-	defer C.free_string(ptrp)
-	return makeNamespace(C.xmlNewNs(node.Ptr, C.to_xmlcharptr(ptrh), C.to_xmlcharptr(ptrp)))
+	defer C.free(unsafe.Pointer(ptrp))
+	return makeNamespace(C.xmlNewNs(node.Ptr, (*C.xmlChar)(unsafe.Pointer(ptrh)), (*C.xmlChar)(unsafe.Pointer(ptrp))))
 }
 
 // xmlNewProp
 func (node *Node) NewAttribute(name string, value string) *Attribute {
 	ptrn := C.CString(name)
-	defer C.free_string(ptrn)
+	defer C.free(unsafe.Pointer(ptrn))
 	ptrv := C.CString(value)
-	defer C.free_string(ptrv)
-	cattr := C.xmlNewProp(node.Ptr, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptrv))
+	defer C.free(unsafe.Pointer(ptrv))
+	cattr := C.xmlNewProp(node.Ptr, (*C.xmlChar)(unsafe.Pointer(ptrn)), (*C.xmlChar)(unsafe.Pointer(ptrv)))
 	return makeAttribute(cattr)
 }
 
 // xmlNewText
 func NewText(content string) *TextNode {
 	ptr := C.CString(content)
-	defer C.free_string(ptr)
-	return makeTextNode(C.xmlNewText(C.to_xmlcharptr(ptr)))
+	defer C.free(unsafe.Pointer(ptr))
+	return makeTextNode(C.xmlNewText((*C.xmlChar)(unsafe.Pointer(ptr))))
 }
 
 // xmlNewTextChild
 func (node *Node) NewTextChild(ns *Namespace, name string, content string) *TextNode {
 	ptrn := C.CString(name)
-	defer C.free_string(ptrn)
+	defer C.free(unsafe.Pointer(ptrn))
 	ptrc := C.CString(content)
-	defer C.free_string(ptrc)
+	defer C.free(unsafe.Pointer(ptrc))
 	if ns == nil {
-		return makeTextNode(C.xmlNewTextChild(node.Ptr, nil, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptrc)))
+		return makeTextNode(C.xmlNewTextChild(node.Ptr, nil, (*C.xmlChar)(unsafe.Pointer(ptrn)), (*C.xmlChar)(unsafe.Pointer(ptrc))))
 	}
-	return makeTextNode(C.xmlNewTextChild(node.Ptr, ns.Ptr, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptrc)))
+	return makeTextNode(C.xmlNewTextChild(node.Ptr, ns.Ptr, (*C.xmlChar)(unsafe.Pointer(ptrn)), (*C.xmlChar)(unsafe.Pointer(ptrc))))
 }
 
 // xmlNextElementSibling
@@ -550,8 +546,8 @@ func (node *Node) NextSibling() *Node {
 // xmlNodeAddContent
 func (node *Node) AddContent(content string) {
 	ptr := C.CString(content)
-	defer C.free_string(ptr)
-	C.xmlNodeAddContent(node.Ptr, C.to_xmlcharptr(ptr))
+	defer C.free(unsafe.Pointer(ptr))
+	C.xmlNodeAddContent(node.Ptr, (*C.xmlChar)(unsafe.Pointer(ptr)))
 }
 
 // xmlNodeDump
@@ -561,8 +557,8 @@ func (doc *Document) NodeDump(buf *Buffer, cur *Node, level int, format int) int
 
 // xmlNodeGetContent
 func (node *Node) GetContent() string {
-	content := C.to_charptr(C.xmlNodeGetContent(node.Ptr))
-	defer C.free_string(content)
+	content := (*C.char)(unsafe.Pointer(C.xmlNodeGetContent(node.Ptr)))
+	defer C.free(unsafe.Pointer(content))
 	return C.GoString(content)
 }
 
@@ -574,23 +570,23 @@ func (node *Node) ListGetString(inLine bool) string {
 	if inLine {
 		cInLine = C.int(1)
 	}
-	str := C.to_charptr(C.xmlNodeListGetString(docptr, ptr, cInLine))
-	defer C.free_string(str)
+	str := (*C.char)(unsafe.Pointer(C.xmlNodeListGetString(docptr, ptr, cInLine)))
+	defer C.free(unsafe.Pointer(str))
 	return C.GoString(str)
 }
 
 // xmlNodeSetContent
 func (node *Node) SetContent(content string) {
 	ptr := C.CString(content)
-	defer C.free_string(ptr)
-	C.xmlNodeSetContent(node.Ptr, C.to_xmlcharptr(ptr))
+	defer C.free(unsafe.Pointer(ptr))
+	C.xmlNodeSetContent(node.Ptr, (*C.xmlChar)(unsafe.Pointer(ptr)))
 }
 
 // xmlNodeSetName
 func (node *Node) SetName(name string) {
 	ptr := C.CString(name)
-	defer C.free_string(ptr)
-	C.xmlNodeSetName(node.Ptr, C.to_xmlcharptr(ptr))
+	defer C.free(unsafe.Pointer(ptr))
+	C.xmlNodeSetName(node.Ptr, (*C.xmlChar)(unsafe.Pointer(ptr)))
 }
 
 // xmlPreviousElementSibling
@@ -616,32 +612,32 @@ func (doc *Document) ProcessXInclude(flags ParserOption) int {
 // xmlSaveFile
 func (doc *Document) SaveFile(filename string) int {
 	ptr := C.CString(filename)
-	defer C.free_string(ptr)
+	defer C.free(unsafe.Pointer(ptr))
 	return int(C.xmlSaveFile(ptr, doc.Ptr))
 }
 
 // xmlSaveFileEnc
 func (doc *Document) SaveFileEnc(filename string, encoding string) int {
 	ptrf := C.CString(filename)
-	defer C.free_string(ptrf)
+	defer C.free(unsafe.Pointer(ptrf))
 	ptre := C.CString(encoding)
-	defer C.free_string(ptre)
+	defer C.free(unsafe.Pointer(ptre))
 	return int(C.xmlSaveFileEnc(ptrf, doc.Ptr, ptre))
 }
 
 // xmlSaveFormatFile
 func (doc *Document) SaveFormatFile(filename string, format int) int {
 	ptr := C.CString(filename)
-	defer C.free_string(ptr)
+	defer C.free(unsafe.Pointer(ptr))
 	return int(C.xmlSaveFormatFile(ptr, doc.Ptr, C.int(format)))
 }
 
 // xmlSaveFormatFileEnc
 func (doc *Document) SaveFormatFileEnc(filename string, encoding string, format int) int {
 	ptrf := C.CString(filename)
-	defer C.free_string(ptrf)
+	defer C.free(unsafe.Pointer(ptrf))
 	ptre := C.CString(encoding)
-	defer C.free_string(ptre)
+	defer C.free(unsafe.Pointer(ptre))
 	return int(C.xmlSaveFormatFileEnc(ptrf, doc.Ptr, ptre, C.int(format)))
 }
 
@@ -663,26 +659,26 @@ func (doc *Document) SetCompressionLevel(level int) {
 // xmlSetProp
 func (node *Node) SetAttribute(name string, value string) *Attribute {
 	ptrn := C.CString(name)
-	defer C.free_string(ptrn)
+	defer C.free(unsafe.Pointer(ptrn))
 	ptrv := C.CString(value)
-	defer C.free_string(ptrv)
-	cattr := C.xmlSetProp(node.Ptr, C.to_xmlcharptr(ptrn), C.to_xmlcharptr(ptrv))
+	defer C.free(unsafe.Pointer(ptrv))
+	cattr := C.xmlSetProp(node.Ptr, (*C.xmlChar)(unsafe.Pointer(ptrn)), (*C.xmlChar)(unsafe.Pointer(ptrv)))
 	return makeAttribute(cattr)
 }
 
 // xmlUnSetProp
 func (node *Node) UnsetAttribute(name string) bool {
 	ptrn := C.CString(name)
-	defer C.free_string(ptrn)
-	res := C.xmlUnsetProp(node.Ptr, C.to_xmlcharptr(ptrn))
+	defer C.free(unsafe.Pointer(ptrn))
+	res := C.xmlUnsetProp(node.Ptr, (*C.xmlChar)(unsafe.Pointer(ptrn)))
 	return res == 0
 }
 
 // xmlTextConcat
 func (node *TextNode) Concat(content string) int {
 	ptr := C.CString(content)
-	defer C.free_string(ptr)
-	return int(C.xmlTextConcat(node.Ptr, C.to_xmlcharptr(ptr), C.int(len(content))))
+	defer C.free(unsafe.Pointer(ptr))
+	return int(C.xmlTextConcat(node.Ptr, (*C.xmlChar)(unsafe.Pointer(ptr)), C.int(len(content))))
 }
 
 // xmlTextMerge
@@ -698,43 +694,43 @@ func (node *Node) Unlink() {
 // xmlUnsetNsProp
 func (node *Node) UnsetNsProp(ns *Namespace, name string) int {
 	ptr := C.CString(name)
-	defer C.free_string(ptr)
-	cint := C.xmlUnsetNsProp(node.Ptr, ns.Ptr, C.to_xmlcharptr(ptr))
+	defer C.free(unsafe.Pointer(ptr))
+	cint := C.xmlUnsetNsProp(node.Ptr, ns.Ptr, (*C.xmlChar)(unsafe.Pointer(ptr)))
 	return int(cint)
 }
 
 // xmlUnsetProp
 func (node *Node) UnsetProp(name string) int {
 	ptr := C.CString(name)
-	defer C.free_string(ptr)
-	cint := C.xmlUnsetProp(node.Ptr, C.to_xmlcharptr(ptr))
+	defer C.free(unsafe.Pointer(ptr))
+	cint := C.xmlUnsetProp(node.Ptr, (*C.xmlChar)(unsafe.Pointer(ptr)))
 	return int(cint)
 }
 
 // xmlValidateNCName
 func ValidateNCName(value string, space int) int {
 	ptr := C.CString(value)
-	defer C.free_string(ptr)
-	return int(C.xmlValidateNCName(C.to_xmlcharptr(ptr), C.int(space)))
+	defer C.free(unsafe.Pointer(ptr))
+	return int(C.xmlValidateNCName((*C.xmlChar)(unsafe.Pointer(ptr)), C.int(space)))
 }
 
 // xmlValidateNMToken
 func ValidateNMToken(value string, space int) int {
 	ptr := C.CString(value)
-	defer C.free_string(ptr)
-	return int(C.xmlValidateNMToken(C.to_xmlcharptr(ptr), C.int(space)))
+	defer C.free(unsafe.Pointer(ptr))
+	return int(C.xmlValidateNMToken((*C.xmlChar)(unsafe.Pointer(ptr)), C.int(space)))
 }
 
 // xmlValidateName
 func ValidateName(value string, space int) int {
 	ptr := C.CString(value)
-	defer C.free_string(ptr)
-	return int(C.xmlValidateName(C.to_xmlcharptr(ptr), C.int(space)))
+	defer C.free(unsafe.Pointer(ptr))
+	return int(C.xmlValidateName((*C.xmlChar)(unsafe.Pointer(ptr)), C.int(space)))
 }
 
 // xmlValidateQName
 func ValidateQName(value string, space int) int {
 	ptr := C.CString(value)
-	defer C.free_string(ptr)
-	return int(C.xmlValidateQName(C.to_xmlcharptr(ptr), C.int(space)))
+	defer C.free(unsafe.Pointer(ptr))
+	return int(C.xmlValidateQName((*C.xmlChar)(unsafe.Pointer(ptr)), C.int(space)))
 }

@@ -3,7 +3,6 @@ package markup
 /*
 #include <libxml/xmlstring.h>
 #include <libxml/dict.h>
-
 */
 import "C"
 

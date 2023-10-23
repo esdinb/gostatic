@@ -2,10 +2,6 @@ package markup
 
 /*
 #include <libxml/tree.h>
-
-static inline void free_string(char* s) { free(s); }
-static inline xmlChar *to_xmlcharptr(const char *s) { return (xmlChar *)s; }
-static inline char *to_charptr(const xmlChar *s) { return (char *)s; }
 */
 import "C"
 import "unsafe"
@@ -41,7 +37,7 @@ func (node *Node) Type() ElementType {
 }
 
 func (node *Node) Name() string {
-	return C.GoString(C.to_charptr(node.Ptr.name))
+	return C.GoString((*C.char)(unsafe.Pointer(node.Ptr.name)))
 }
 
 func (node *Node) Next() *Node {
@@ -61,7 +57,7 @@ func (attr *Attribute) Type() ElementType {
 }
 
 func (attr *Attribute) Name() string {
-	return C.GoString(C.to_charptr(attr.Ptr.name))
+	return C.GoString((*C.char)(unsafe.Pointer(attr.Ptr.name)))
 }
 
 func (attr *Attribute) Children() *Node {
@@ -77,11 +73,11 @@ func (attr *Attribute) Namespace() *Namespace {
 }
 
 func (ns *Namespace) Href() string {
-	return C.GoString(C.to_charptr(ns.Ptr.href))
+	return C.GoString((*C.char)(unsafe.Pointer(ns.Ptr.href)))
 }
 
 func (ns *Namespace) Prefix() string {
-	return C.GoString(C.to_charptr(ns.Ptr.prefix))
+	return C.GoString((*C.char)(unsafe.Pointer(ns.Ptr.prefix)))
 }
 
 func (elem ElementType) GoString() string {

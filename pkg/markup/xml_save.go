@@ -1,9 +1,9 @@
 package markup
 
 /*
+#include <stdlib.h>
 #include <libxml/xmlsave.h>
 #include "xml_save.h"
-
 */
 import "C"
 import (

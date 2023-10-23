@@ -2,10 +2,6 @@ package markup
 
 /*
 #include <libxml/parser.h>
-
-static inline void free_string(char* s) { free(s); }
-static inline xmlChar *to_xmlcharptr(const char *s) { return (xmlChar *)s; }
-static inline char *to_charptr(const xmlChar *s) { return (char *)s; }
 */
 import "C"
 import "unsafe"
