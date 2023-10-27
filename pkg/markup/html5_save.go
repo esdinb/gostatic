@@ -53,10 +53,6 @@ func (s *HTML5Serializer) WriteString(data string) (int, error) {
 }
 
 func (s *HTML5Serializer) serializeDocument(doc *Document) error {
-	_, err := s.Write([]byte("<!DOCTYPE html>\n"))
-	if err != nil {
-		return err
-	}
 	s.serializeFragment(doc.Children())
 	return nil
 }
