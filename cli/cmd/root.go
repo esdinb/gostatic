@@ -2,12 +2,15 @@ package cmd
 
 import (
 	"context"
+	_ "embed"
 	"log"
 	"os"
-	"runtime"
 
 	"github.com/spf13/cobra"
 )
+
+//go:embed version.txt
+var VersionString string
 
 type contextKey struct {
 	name string
@@ -28,7 +31,7 @@ var rootCmd = &cobra.Command{
 	Long: `Make static websites with XSLT.
 
 `,
-	Version: "0.0.1",
+	Version: VersionString,
 }
 
 func Execute() {
@@ -41,7 +44,6 @@ func Execute() {
 }
 
 func init() {
-	_ = runtime.GOOS
-	rootCmd.SetVersionTemplate(`{{with .Name}}{{printf "%s " .}}{{end}}{{printf "🤓 v%s" .Version}}
+	rootCmd.SetVersionTemplate(`{{with .Name}}{{printf "%s " .}}{{end}}{{printf "🤓 %s" .Version}}
 `)
 }
