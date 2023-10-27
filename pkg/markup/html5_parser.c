@@ -124,8 +124,49 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
         return token;
     }
 
-    name = (lxb_char_t *) lxb_tag_name_by_id(tags, token->tag_id, NULL);
+    if (token->tag_id == LXB_TAG__EM_DOCTYPE) {
+
+        if (!node_stack_is_empty(parser_ctx->stack)) {
+            parserError("invalid state");
+        }
+
+        attr = token->attr_first;
+        xmlChar *dtd_id;
+        xmlChar *dtd_name;
+        xmlDtdPtr dtd;
+
+        dtd_name = xmlStrndup((const xmlChar *) attr->name_begin, (int) (attr->name_end - attr->name_begin));
+       
+        attr = attr->next;
+        if (attr == NULL) {
+            dtd = xmlNewDtd(parser_ctx->document, dtd_name, NULL, NULL);
+        }
+        else if (attr->name->attr_id == LXB_DOM_ATTR_PUBLIC) {
+            dtd_id = xmlCharStrndup((const char *) attr->value, attr->value_size);
+            dtd = xmlNewDtd(parser_ctx->document, dtd_name, dtd_id, NULL);
+            xmlFree(dtd_id);
+        }
+        else if (attr->name->attr_id == LXB_DOM_ATTR_SYSTEM) {
+            dtd_id = xmlCharStrndup((const char *) attr->value, attr->value_size);
+            dtd = xmlNewDtd(parser_ctx->document, dtd_name, NULL, dtd_id);
+            xmlFree(dtd_id);
+        }
+        else {
+            dtd = xmlNewDtd(parser_ctx->document, dtd_name, NULL, NULL);
+        }
+
+        xmlDtdPtr res = (xmlDtdPtr) xmlAddChild((xmlNodePtr) parser_ctx->document, (xmlNodePtr) dtd);
+        if (res == NULL) {
+            parserError("failed to add DTD node");
+        }
+
+        xmlFree(dtd_name);
+
+        return token;
+    }
+
     is_void = lxb_html_tag_is_void(token->tag_id);
+    name = (lxb_char_t *) lxb_tag_name_by_id(tags, token->tag_id, NULL);
     if (name == NULL) {
         parserError("failed to get token name");
     }
