@@ -113,13 +113,12 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
 
     if (token->tag_id == LXB_TAG__EM_COMMENT) {
 
-        node = xmlNewComment(NULL);
-        text = xmlNewDocTextLen(parser_ctx->document, (const xmlChar *) token->text_start, (int) (token->text_end - token->text_start));
-        if (xmlAddChild(node, text) == NULL) {
-            parserError("failed to add comment text");
-        }
+        content = xmlCharStrndup((const char *) token->text_start, (int) (token->text_end - token->text_start));
+        node = xmlNewDocComment(parser_ctx->document, content);
 
         html5_parse_append_element(parser_ctx, node);
+
+        xmlFree((void *) content);
 
         return token;
     }
@@ -144,12 +143,12 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
         else if (attr->name->attr_id == LXB_DOM_ATTR_PUBLIC) {
             dtd_id = xmlCharStrndup((const char *) attr->value, attr->value_size);
             dtd = xmlNewDtd(parser_ctx->document, dtd_name, dtd_id, NULL);
-            xmlFree(dtd_id);
+            xmlFree((void *) dtd_id);
         }
         else if (attr->name->attr_id == LXB_DOM_ATTR_SYSTEM) {
             dtd_id = xmlCharStrndup((const char *) attr->value, attr->value_size);
             dtd = xmlNewDtd(parser_ctx->document, dtd_name, NULL, dtd_id);
-            xmlFree(dtd_id);
+            xmlFree((void *) dtd_id);
         }
         else {
             dtd = xmlNewDtd(parser_ctx->document, dtd_name, NULL, NULL);
@@ -160,7 +159,7 @@ token_callback(lxb_html_tokenizer_t *tokenizer, lxb_html_token_t *token, void *c
             parserError("failed to add DTD node");
         }
 
-        xmlFree(dtd_name);
+        xmlFree((void *) dtd_name);
 
         return token;
     }
