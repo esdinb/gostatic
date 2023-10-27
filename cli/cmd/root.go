@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"runtime"
 
 	"github.com/spf13/cobra"
 )
@@ -27,7 +28,7 @@ var rootCmd = &cobra.Command{
 	Long: `Make static websites with XSLT.
 
 `,
-	Version: "0.1",
+	Version: "0.0.1",
 }
 
 func Execute() {
@@ -40,6 +41,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.SetVersionTemplate(`{{with .Name}}{{printf "%s " .}}{{end}}{{printf "🤓 v. %s" .Version}}
+	_ = runtime.GOOS
+	rootCmd.SetVersionTemplate(`{{with .Name}}{{printf "%s " .}}{{end}}{{printf "🤓 v%s" .Version}}
 `)
 }
