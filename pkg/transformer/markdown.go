@@ -9,7 +9,6 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"gostatic/pkg/markdown"
 	"gostatic/pkg/markup"
 )
 
@@ -76,7 +75,8 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 			sourcePath = inPath
 		}
 		node.SetContent("")
-		err = markdown.Convert(bytes, document, node)
+		converter := configMarkdownConverter()
+		err = converter.Convert(bytes, document, node)
 		if err != nil {
 			return ctx, Continue, err
 		}

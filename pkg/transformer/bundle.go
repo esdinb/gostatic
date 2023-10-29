@@ -17,27 +17,6 @@ var (
 	jsLoaders  map[string]api.Loader
 )
 
-func makeBuildOptions(rootPath string, loader map[string]api.Loader) api.BuildOptions {
-	return api.BuildOptions{
-		Color:             api.ColorIfTerminal,
-		LogLevel:          api.LogLevelDebug,
-		Sourcemap:         api.SourceMapNone,
-		Target:            api.ESNext,
-		MinifyWhitespace:  true,
-		MinifyIdentifiers: true,
-		MinifySyntax:      true,
-		LineLimit:         80,
-		Charset:           api.CharsetUTF8,
-		TreeShaking:       api.TreeShakingTrue,
-		LegalComments:     api.LegalCommentsInline,
-		Bundle:            true,
-		AbsWorkingDir:     rootPath,
-		Platform:          api.PlatformBrowser,
-		Format:            api.FormatESModule,
-		Loader:            loader,
-	}
-}
-
 func buildBundle(buildOptions api.BuildOptions) string {
 	var builder strings.Builder
 
@@ -50,14 +29,14 @@ func buildBundle(buildOptions api.BuildOptions) string {
 }
 
 func bundleInline(content string, rootPath string, stdinOptions api.StdinOptions, loaders map[string]api.Loader) string {
-	buildOptions := makeBuildOptions(rootPath, loaders)
+	buildOptions := configBundleOptions(rootPath, loaders)
 	buildOptions.Stdin = &stdinOptions
 
 	return buildBundle(buildOptions)
 }
 
 func bundle(filePaths []string, rootPath string, loaders map[string]api.Loader) string {
-	buildOptions := makeBuildOptions(rootPath, loaders)
+	buildOptions := configBundleOptions(rootPath, loaders)
 	buildOptions.EntryPoints = filePaths
 
 	return buildBundle(buildOptions)
