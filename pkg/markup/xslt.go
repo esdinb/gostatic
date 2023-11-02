@@ -19,22 +19,22 @@ func (s *Stylesheet) Free() {
 func ParseStylesheetFile(filename string) *Stylesheet {
 	ptrf := C.CString(filename)
 	defer C.free(unsafe.Pointer(ptrf))
-	ptrs := C.xsltParseStylesheetFile((*C.xmlChar)(unsafe.Pointer(ptrf)))
-	return &Stylesheet{ptrs}
+	if ptrs := C.xsltParseStylesheetFile((*C.xmlChar)(unsafe.Pointer(ptrf))); ptrs != nil {
+		return &Stylesheet{ptrs}
+	}
+	return nil
 }
 
 func ParseStylesheetDoc(doc *Document) *Stylesheet {
-	if ptr := C.xsltParseStylesheetDoc(doc.Ptr); ptr == nil {
-		return nil
-	} else {
+	if ptr := C.xsltParseStylesheetDoc(doc.Ptr); ptr != nil {
 		return &Stylesheet{ptr}
 	}
+	return nil
 }
 
 func LoadStylesheetPI(doc *Document) *Stylesheet {
-	if ptr := C.xsltLoadStylesheetPI(doc.Ptr); ptr == nil {
-		return nil
-	} else {
+	if ptr := C.xsltLoadStylesheetPI(doc.Ptr); ptr != nil {
 		return &Stylesheet{ptr}
 	}
+	return nil
 }
