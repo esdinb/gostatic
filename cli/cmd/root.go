@@ -28,8 +28,13 @@ var ServerPortContextKey = contextKey{"serverport"}
 var rootCmd = &cobra.Command{
 	Use:   "gostatic",
 	Short: "Make static 🥚s with 🥚 tech.",
-	Long: `Make static websites with XSLT.
+	Long: `This tool applies XSLT transformations to HTML and XML input files.
 
+Supported character encodings: utf-8.
+
+File extension determines input/output format: .html or .xml.
+
+Using stdin and stdout assumes XML document encoding.
 `,
 	Version: VersionString,
 }
