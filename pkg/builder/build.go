@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -334,6 +335,10 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 	ctx = context.WithValue(ctx, config.RootPathContextKey, rootPath)
 	ctx = context.WithValue(ctx, config.ParamsContextKey, []string{})
 	ctx = context.WithValue(ctx, config.StringParamsContextKey, []string{})
+
+	if logger, ok := ctx.Value(config.LoggerContextKey).(*log.Logger); ok {
+		markup.SetErrorReporting(logger)
+	}
 
 	inPath := b.In
 	outPath := b.Out
