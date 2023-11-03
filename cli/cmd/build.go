@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"gostatic/pkg/builder"
+	"gostatic/pkg/config"
 
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v3"
@@ -66,7 +67,7 @@ func readBuildConfiguration(path string) ([]builder.BuildSection, error) {
 
 func runBuild(ctx context.Context, wg *sync.WaitGroup, buildPath string) {
 
-	logger := ctx.Value(LoggerContextKey).(*log.Logger)
+	logger := ctx.Value(config.LoggerContextKey).(*log.Logger)
 
 	config, err := readBuildConfiguration(buildPath)
 	if err != nil {
@@ -98,7 +99,7 @@ var buildCmd = &cobra.Command{
 
 		ctx := cmd.Context()
 
-		logger := ctx.Value(LoggerContextKey).(*log.Logger)
+		logger := ctx.Value(config.LoggerContextKey).(*log.Logger)
 		logger.SetPrefix("🧱  ")
 
 		argPath := ""

@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"context"
+	"gostatic/pkg/config"
 	"gostatic/pkg/markup"
 )
 
@@ -26,7 +27,7 @@ func TransformWhitespace(ctx context.Context, args []string) (context.Context, S
 	} else {
 		subcommand = "normalize"
 	}
-	document := ctx.Value(DocumentContextKey).(*markup.Document)
+	document := ctx.Value(config.DocumentContextKey).(*markup.Document)
 
 	switch subcommand {
 	case "normalize":

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gostatic/pkg/config"
 	"log"
 	"net/http"
 	"os"
@@ -37,7 +38,7 @@ func loggingHandler(logger *log.Logger, handler http.Handler) http.Handler {
 
 func runServer(ctx context.Context, wg *sync.WaitGroup, address string, port int, rootPath string) {
 
-	logger := ctx.Value(LoggerContextKey).(*log.Logger)
+	logger := ctx.Value(config.LoggerContextKey).(*log.Logger)
 
 	fsHandler := http.FileServer(http.Dir(rootPath))
 
@@ -79,7 +80,7 @@ Serves files from %s or the directory named on the command line.
 
 		ctx := cmd.Context()
 
-		logger := ctx.Value(LoggerContextKey).(*log.Logger)
+		logger := ctx.Value(config.LoggerContextKey).(*log.Logger)
 		logger.SetPrefix("🏄 ")
 
 		serverRoot := args[0]
