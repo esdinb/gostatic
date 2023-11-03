@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	_ "embed"
+	"gostatic/pkg/config"
 	"log"
 	"os"
 
@@ -11,19 +12,6 @@ import (
 
 //go:embed version.txt
 var VersionString string
-
-type contextKey struct {
-	name string
-}
-
-func (k *contextKey) String() string { return "gostatic cli context key " + k.name }
-
-var LoggerContextKey = contextKey{"logger"}
-var RootPathContextKey = contextKey{"rootpath"}
-var BuildPathContextKey = contextKey{"buildpath"}
-var ServerRootContextKey = contextKey{"serverroot"}
-var ServerAddressContextKey = contextKey{"serveraddress"}
-var ServerPortContextKey = contextKey{"serverport"}
 
 var rootCmd = &cobra.Command{
 	Use:   "gostatic",
@@ -36,7 +24,7 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	logger := log.New(os.Stderr, "🐙 ", 0)
-	ctx := context.WithValue(context.Background(), LoggerContextKey, logger)
+	ctx := context.WithValue(context.Background(), config.LoggerContextKey, logger)
 	err := rootCmd.ExecuteContext(ctx)
 	if err != nil {
 		os.Exit(1)

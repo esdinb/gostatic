@@ -3,6 +3,7 @@ package transformer
 import (
 	"context"
 	"errors"
+	"gostatic/pkg/config"
 	"gostatic/pkg/markup"
 	"path/filepath"
 	"strings"
@@ -17,7 +18,7 @@ func customLoader(ctx context.Context) markup.DocLoaderFunc {
 		loadType markup.LoadType,
 	) *markup.Document {
 		templatePath := uri
-		rootPath := ctx.Value(RootPathContextKey).(string)
+		rootPath := ctx.Value(config.RootPathContextKey).(string)
 		if !strings.HasPrefix(uri, rootPath) {
 			templatePath = filepath.Join(rootPath, uri)
 		}
@@ -37,7 +38,7 @@ func TransformTemplate(ctx context.Context, args []string) (context.Context, Sta
 	var style *markup.Stylesheet
 	var document *markup.Document
 
-	document = ctx.Value(DocumentContextKey).(*markup.Document)
+	document = ctx.Value(config.DocumentContextKey).(*markup.Document)
 	filename = args[0]
 	if filename == "inline" {
 		style = markup.LoadStylesheetPI(document)
@@ -47,14 +48,17 @@ func TransformTemplate(ctx context.Context, args []string) (context.Context, Sta
 	} else {
 		style = markup.ParseStylesheetFile(filename)
 	}
+	if style == nil {
+		return ctx, Continue, errors.New("unable to parse stylesheet")
+	}
 
 	defer style.Free()
 
-	params, ok := ctx.Value(ParamsContextKey).([]string)
+	params, ok := ctx.Value(config.ParamsContextKey).([]string)
 	if !ok {
 		return ctx, Continue, errors.New("missing params array")
 	}
-	strparams, ok := ctx.Value(StringParamsContextKey).([]string)
+	strparams, ok := ctx.Value(config.StringParamsContextKey).([]string)
 	if !ok {
 		return ctx, Continue, errors.New("missing strparams array")
 	}
@@ -64,7 +68,7 @@ func TransformTemplate(ctx context.Context, args []string) (context.Context, Sta
 		return ctx, Continue, errors.New("error applying stylesheet")
 	} else {
 		document.Free()
-		ctx = context.WithValue(ctx, DocumentContextKey, transformation)
+		ctx = context.WithValue(ctx, config.DocumentContextKey, transformation)
 	}
 
 	return ctx, Continue, nil

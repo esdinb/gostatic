@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"gostatic/pkg/config"
 	"gostatic/pkg/markup"
 	"gostatic/pkg/transformer"
 )
@@ -50,7 +52,7 @@ var lookupLoader = lookupFunc(map[string]LoaderFunc{
 }, nopLoader)
 
 func xmlLoader(ctx context.Context) (context.Context, error) {
-	inPath, ok := ctx.Value(transformer.InPathContextKey).(string)
+	inPath, ok := ctx.Value(config.InPathContextKey).(string)
 	if !ok {
 		return nil, errors.New("missing input path for xml loader")
 	}
@@ -60,11 +62,11 @@ func xmlLoader(ctx context.Context) (context.Context, error) {
 		return nil, errors.New("unable to load xml file")
 	}
 
-	return context.WithValue(ctx, transformer.DocumentContextKey, doc), nil
+	return context.WithValue(ctx, config.DocumentContextKey, doc), nil
 }
 
 func htmlLoader(ctx context.Context) (context.Context, error) {
-	inPath, ok := ctx.Value(transformer.InPathContextKey).(string)
+	inPath, ok := ctx.Value(config.InPathContextKey).(string)
 	if !ok {
 		return nil, errors.New("missing input path for html loader")
 	}
@@ -74,7 +76,7 @@ func htmlLoader(ctx context.Context) (context.Context, error) {
 		return nil, errors.New("unable to load xml file")
 	}
 
-	return context.WithValue(ctx, transformer.DocumentContextKey, doc), nil
+	return context.WithValue(ctx, config.DocumentContextKey, doc), nil
 }
 
 func nopLoader(ctx context.Context) (context.Context, error) {
@@ -92,14 +94,14 @@ func xmlFormatter(ctx context.Context) error {
 
 	options = markup.SaveOption(0)
 
-	doc, ok = ctx.Value(transformer.DocumentContextKey).(*markup.Document)
+	doc, ok = ctx.Value(config.DocumentContextKey).(*markup.Document)
 	if !ok {
 		return errors.New("missing transformation document for xml formatter")
 	}
 
-	outFile, ok = ctx.Value(transformer.OutFileContextKey).(*os.File)
+	outFile, ok = ctx.Value(config.OutFileContextKey).(*os.File)
 	if !ok {
-		outPath, ok := ctx.Value(transformer.OutPathContextKey).(string)
+		outPath, ok := ctx.Value(config.OutPathContextKey).(string)
 		if !ok {
 			return errors.New("missing output file path for xml formatter")
 		} else {
@@ -136,14 +138,14 @@ func htmlFormatter(ctx context.Context) error {
 
 	options = markup.SaveOption(markup.XML_SAVE_NO_DECL | markup.XML_SAVE_NO_EMPTY | markup.XML_SAVE_AS_XML)
 
-	doc, ok = ctx.Value(transformer.DocumentContextKey).(*markup.Document)
+	doc, ok = ctx.Value(config.DocumentContextKey).(*markup.Document)
 	if !ok {
 		return errors.New("missing transformation document for html formatter")
 	}
 
-	outFile, ok = ctx.Value(transformer.OutFileContextKey).(*os.File)
+	outFile, ok = ctx.Value(config.OutFileContextKey).(*os.File)
 	if !ok {
-		outPath, ok := ctx.Value(transformer.OutPathContextKey).(string)
+		outPath, ok := ctx.Value(config.OutPathContextKey).(string)
 		if !ok {
 			return errors.New("missing output file path for html formatter")
 		} else {
@@ -175,9 +177,9 @@ func copyFormatter(ctx context.Context) error {
 		err     error
 	)
 
-	inFile, ok = ctx.Value(transformer.InFileContextKey).(*os.File)
+	inFile, ok = ctx.Value(config.InFileContextKey).(*os.File)
 	if !ok {
-		inPath, ok := ctx.Value(transformer.InPathContextKey).(string)
+		inPath, ok := ctx.Value(config.InPathContextKey).(string)
 		if !ok {
 			return errors.New("missing input file for copy")
 		}
@@ -187,9 +189,9 @@ func copyFormatter(ctx context.Context) error {
 		}
 	}
 
-	outFile, ok = ctx.Value(transformer.OutFileContextKey).(*os.File)
+	outFile, ok = ctx.Value(config.OutFileContextKey).(*os.File)
 	if !ok {
-		outPath, ok := ctx.Value(transformer.OutPathContextKey).(string)
+		outPath, ok := ctx.Value(config.OutPathContextKey).(string)
 		if !ok {
 			return errors.New("missing output file for copy")
 		}
@@ -226,7 +228,7 @@ func openFileForWriting(outPath string) (*os.File, error) {
 }
 
 func freeContextDocument(ctx context.Context) {
-	doc, ok := ctx.Value(transformer.DocumentContextKey).(*markup.Document)
+	doc, ok := ctx.Value(config.DocumentContextKey).(*markup.Document)
 	if ok {
 		doc.Free()
 	}
@@ -241,12 +243,12 @@ func freeBuildContext(ctx context.Context) {
 
 	freeContextDocument(ctx)
 
-	inFile, ok = ctx.Value(transformer.InFileContextKey).(*os.File)
+	inFile, ok = ctx.Value(config.InFileContextKey).(*os.File)
 	if ok {
 		inFile.Close()
 	}
 
-	outFile, ok = ctx.Value(transformer.OutFileContextKey).(*os.File)
+	outFile, ok = ctx.Value(config.OutFileContextKey).(*os.File)
 	if ok {
 		outFile.Close()
 	}
@@ -307,7 +309,7 @@ func (b *BuildSection) ProcessFile(ctx context.Context) error {
 		return err
 	}
 
-	if format, ok := ctx.Value(transformer.FormatterContextKey).(FormatterFunc); ok {
+	if format, ok := ctx.Value(config.FormatterContextKey).(FormatterFunc); ok {
 		err := format(ctx)
 		if err != nil {
 			return err
@@ -328,11 +330,15 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 		return err
 	}
 
-	ctx = context.WithValue(ctx, transformer.InPathContextKey, b.In)
-	ctx = context.WithValue(ctx, transformer.OutPathContextKey, b.Out)
-	ctx = context.WithValue(ctx, transformer.RootPathContextKey, rootPath)
-	ctx = context.WithValue(ctx, transformer.ParamsContextKey, []string{})
-	ctx = context.WithValue(ctx, transformer.StringParamsContextKey, []string{})
+	ctx = context.WithValue(ctx, config.InPathContextKey, b.In)
+	ctx = context.WithValue(ctx, config.OutPathContextKey, b.Out)
+	ctx = context.WithValue(ctx, config.RootPathContextKey, rootPath)
+	ctx = context.WithValue(ctx, config.ParamsContextKey, []string{})
+	ctx = context.WithValue(ctx, config.StringParamsContextKey, []string{})
+
+	if logger, ok := ctx.Value(config.LoggerContextKey).(*log.Logger); ok {
+		markup.SetErrorReporting(logger)
+	}
 
 	inPath := b.In
 	outPath := b.Out
@@ -341,7 +347,7 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 
 	if outPath == "-" {
 		outFile = os.Stdout
-		ctx = context.WithValue(ctx, transformer.OutFileContextKey, os.Stdout)
+		ctx = context.WithValue(ctx, config.OutFileContextKey, os.Stdout)
 		formatter = lookupFormatter(filepath.Ext(inPath))
 	} else {
 		if info, err := os.Stat(absPath); err != nil {
@@ -394,10 +400,10 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 			if len(bytes) > 0 {
 				buildCtx := context.WithValue(
 					ctx,
-					transformer.DocumentContextKey,
+					config.DocumentContextKey,
 					markup.ReadMemory(bytes, b.In, "UTF-8", parseOptions),
 				)
-				buildCtx = context.WithValue(buildCtx, transformer.FormatterContextKey, formatter)
+				buildCtx = context.WithValue(buildCtx, config.FormatterContextKey, formatter)
 				err = b.ProcessFile(buildCtx)
 				freeContextDocument(buildCtx)
 				if err != nil {
@@ -432,9 +438,9 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 				}
 				formatter = lookupFormatter(filepath.Ext(outPath))
 			}
-			buildCtx := context.WithValue(ctx, transformer.InPathContextKey, inPath)
-			buildCtx = context.WithValue(buildCtx, transformer.OutPathContextKey, outPath)
-			buildCtx = context.WithValue(buildCtx, transformer.FormatterContextKey, formatter)
+			buildCtx := context.WithValue(ctx, config.InPathContextKey, inPath)
+			buildCtx = context.WithValue(buildCtx, config.OutPathContextKey, outPath)
+			buildCtx = context.WithValue(buildCtx, config.FormatterContextKey, formatter)
 			loader := lookupLoader(filepath.Ext(inPath))
 			buildCtx, err = loader(buildCtx)
 			if err != nil {

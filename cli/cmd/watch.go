@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"gostatic/pkg/config"
 	"io/fs"
 	"log"
 	"os"
@@ -105,7 +106,7 @@ func runWatcher(ctx context.Context, wg *sync.WaitGroup, filePaths []string, mat
 		err     error
 	)
 
-	logger := ctx.Value(LoggerContextKey).(*log.Logger)
+	logger := ctx.Value(config.LoggerContextKey).(*log.Logger)
 
 	watcher, err = fsnotify.NewWatcher()
 	if err != nil {
@@ -193,7 +194,7 @@ A project directory is a directory with a build.yaml file.
 
 		ctx := cmd.Context()
 
-		logger := ctx.Value(LoggerContextKey).(*log.Logger)
+		logger := ctx.Value(config.LoggerContextKey).(*log.Logger)
 		logger.SetPrefix("👀 ")
 
 		buildPath, err := getConfigurationPath(args[0], configName)
