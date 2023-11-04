@@ -3,6 +3,7 @@ package markup
 
 /*
 #include <libxml/xmlerror.h>
+#include <libxslt/xsltutils.h>
 #include "xml_error.h"
 */
 import "C"
@@ -827,8 +828,20 @@ func go_error_callback(userData unsafe.Pointer, err C.xmlErrorPtr) {
 	logger.Println(message)
 }
 
+//export go_error_print_callback
+func go_error_print_callback(userData unsafe.Pointer, message *C.char) {
+	handle := *(*cgo.Handle)(userData)
+	logger := handle.Value().(*log.Logger)
+	logger.SetPrefix(" ‣ ")
+	logger.Println(strings.TrimSpace(C.GoString(message)))
+}
+
 func SetErrorReporting(logger *log.Logger) {
+	if loggerHandle != nil {
+		loggerHandle.Delete()
+	}
 	handle := cgo.NewHandle(logger)
 	loggerHandle = &handle
-	C.xmlSetStructuredErrorFunc(unsafe.Pointer(loggerHandle), C.xmlStructuredErrorFunc(C.custom_error_func))
+	C.xmlSetStructuredErrorFunc(unsafe.Pointer(loggerHandle), C.xmlStructuredErrorFunc(C.structured_error_func))
+	C.set_xslt_error_func(unsafe.Pointer(loggerHandle))
 }

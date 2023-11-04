@@ -3,8 +3,9 @@ package transformer
 import (
 	"context"
 	"errors"
-	"gostatic/pkg/config"
+	builder_context "gostatic/pkg/builder/context"
 	"gostatic/pkg/markup"
+	"log"
 	"path/filepath"
 	"strings"
 )
@@ -18,7 +19,7 @@ func customLoader(ctx context.Context) markup.DocLoaderFunc {
 		loadType markup.LoadType,
 	) *markup.Document {
 		templatePath := uri
-		rootPath := ctx.Value(config.RootPathContextKey).(string)
+		rootPath := ctx.Value(builder_context.RootPathContextKey).(string)
 		if !strings.HasPrefix(uri, rootPath) {
 			templatePath = filepath.Join(rootPath, uri)
 		}
@@ -34,11 +35,16 @@ func TransformTemplate(ctx context.Context, args []string) (context.Context, Sta
 
 	markup.SetLoaderFunc(customLoader(ctx))
 
+	var logger *log.Logger
 	var filename string
 	var style *markup.Stylesheet
 	var document *markup.Document
 
-	document = ctx.Value(config.DocumentContextKey).(*markup.Document)
+	logger = ctx.Value(builder_context.LoggerContextKey).(*log.Logger)
+	document, ok := ctx.Value(builder_context.DocumentContextKey).(*markup.Document)
+	if !ok {
+		return ctx, Continue, errors.New("missing input document to template transform")
+	}
 	filename = args[0]
 	if filename == "inline" {
 		style = markup.LoadStylesheetPI(document)
@@ -54,21 +60,24 @@ func TransformTemplate(ctx context.Context, args []string) (context.Context, Sta
 
 	defer style.Free()
 
-	params, ok := ctx.Value(config.ParamsContextKey).([]string)
+	params, ok := ctx.Value(builder_context.ParamsContextKey).([]string)
 	if !ok {
 		return ctx, Continue, errors.New("missing params array")
 	}
-	strparams, ok := ctx.Value(config.StringParamsContextKey).([]string)
+	strparams, ok := ctx.Value(builder_context.StringParamsContextKey).([]string)
 	if !ok {
 		return ctx, Continue, errors.New("missing strparams array")
 	}
 
-	transformation := markup.ApplyStylesheetUser(style, document, params, strparams)
+	transformCtx := markup.NewTransformContext(style, document, logger)
+	defer transformCtx.Free()
+
+	transformation := transformCtx.ApplyStylesheet(style, document, params, strparams)
 	if transformation == nil {
 		return ctx, Continue, errors.New("error applying stylesheet")
 	} else {
 		document.Free()
-		ctx = context.WithValue(ctx, config.DocumentContextKey, transformation)
+		ctx = context.WithValue(ctx, builder_context.DocumentContextKey, transformation)
 	}
 
 	return ctx, Continue, nil
