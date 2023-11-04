@@ -811,15 +811,15 @@ func go_error_callback(userData unsafe.Pointer, err C.xmlErrorPtr) {
 		panic("unknown error level")
 	}
 	switch code {
-	case ParserError(1):
+	case XML_ERR_INTERNAL_ERROR:
 		return
-	case ParserError(5):
+	case XML_ERR_DOCUMENT_END:
 		message = fmt.Sprintf("%s:%d:%d extra content at end of document", C.GoString(err.file), int(err.line), int(err.int2))
-	case ParserError(68):
+	case XML_ERR_NAME_REQUIRED:
 		message = fmt.Sprintf("%s:%d:%d error parsing attribute name", C.GoString(err.file), int(err.line), int(err.int2))
-	case ParserError(73):
+	case XML_ERR_GT_REQUIRED:
 		message = fmt.Sprintf("%s:%d:%d couldn't find end of start tag (%s)", C.GoString(err.file), int(err.line), int(err.int1), C.GoString(err.str1))
-	case ParserError(76):
+	case XML_ERR_TAG_NAME_MISMATCH:
 		message = fmt.Sprintf("%s:%d:%d tag name mismatch (%s and %s)", C.GoString(err.file), int(err.line), int(err.int2), C.GoString(err.str1), C.GoString(err.str2))
 	default:
 		message = fmt.Sprintf("%s:%d:%d (code %d) %s", C.GoString(err.file), int(err.line), int(err.int2), int(code), strings.TrimSpace(C.GoString(err.message)))
