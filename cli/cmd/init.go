@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"gostatic/pkg/config"
+	builder_context "gostatic/pkg/builder/context"
 	"io/fs"
 	"log"
 	"os"
@@ -34,7 +34,7 @@ or in the directory named on the command line.`,
 
 		ctx := cmd.Context()
 
-		logger := ctx.Value(config.LoggerContextKey).(*log.Logger)
+		logger := ctx.Value(builder_context.LoggerContextKey).(*log.Logger)
 		logger.SetPrefix("🐣  ")
 
 		if len(args) == 1 {

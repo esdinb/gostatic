@@ -9,13 +9,13 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"gostatic/pkg/config"
+	builder_context "gostatic/pkg/builder/context"
 	"gostatic/pkg/markup"
 )
 
 func TransformMarkdown(ctx context.Context, args []string) (context.Context, Status, error) {
 
-	document := ctx.Value(config.DocumentContextKey).(*markup.Document)
+	document := ctx.Value(builder_context.DocumentContextKey).(*markup.Document)
 	xpath := markup.NewXPathContext(document)
 	defer xpath.Free()
 
@@ -38,8 +38,8 @@ func TransformMarkdown(ctx context.Context, args []string) (context.Context, Sta
 
 		content = strings.TrimSpace(node.GetContent())
 
-		rootPath := ctx.Value(config.RootPathContextKey).(string)
-		inPath := ctx.Value(config.InPathContextKey).(string)
+		rootPath := ctx.Value(builder_context.RootPathContextKey).(string)
+		inPath := ctx.Value(builder_context.InPathContextKey).(string)
 		absPath = ""
 		for attr := node.Attributes(); attr != nil; attr = attr.Next() {
 			if attr.Name() == "src" {

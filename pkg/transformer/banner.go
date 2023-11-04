@@ -3,7 +3,7 @@ package transformer
 import (
 	"context"
 	"errors"
-	"gostatic/pkg/config"
+	builder_context "gostatic/pkg/builder/context"
 	"gostatic/pkg/markup"
 	"strings"
 
@@ -24,7 +24,7 @@ func TransformBanner(ctx context.Context, args []string) (context.Context, Statu
 		text = strings.Join(args[1:], "")
 	}
 	banner := figure.NewFigure(text, font, true).String()
-	document, ok := ctx.Value(config.DocumentContextKey).(*markup.Document)
+	document, ok := ctx.Value(builder_context.DocumentContextKey).(*markup.Document)
 	if !ok {
 		return ctx, Continue, errors.New("missing input document")
 	}

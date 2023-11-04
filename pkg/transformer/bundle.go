@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gostatic/pkg/config"
+	builder_context "gostatic/pkg/builder/context"
 	"gostatic/pkg/markup"
 	"os"
 	"path/filepath"
@@ -45,16 +45,16 @@ func bundle(filePaths []string, rootPath string, loaders map[string]api.Loader) 
 
 func TransformBundle(ctx context.Context, args []string) (context.Context, Status, error) {
 
-	document := ctx.Value(config.DocumentContextKey).(*markup.Document)
+	document := ctx.Value(builder_context.DocumentContextKey).(*markup.Document)
 	if document == nil {
 		return ctx, Continue, errors.New("missing input document")
 	}
 
-	rootPath, ok := ctx.Value(config.RootPathContextKey).(string)
+	rootPath, ok := ctx.Value(builder_context.RootPathContextKey).(string)
 	if !ok {
 		return ctx, Continue, errors.New("missing root path")
 	}
-	inPath, ok := ctx.Value(config.InPathContextKey).(string)
+	inPath, ok := ctx.Value(builder_context.InPathContextKey).(string)
 	if !ok {
 		return ctx, Continue, errors.New("missing input path")
 	}

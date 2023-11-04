@@ -1,6 +1,11 @@
-package config
+package builder_context
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+)
 
 type contextKey struct {
 	name string
@@ -21,3 +26,9 @@ var DocumentContextKey = contextKey{"documentpath"}
 var ParamsContextKey = contextKey{"paramspath"}
 var StringParamsContextKey = contextKey{"strparamspath"}
 var FormatterContextKey = contextKey{"formatterpath"}
+
+func NewBuildContext() context.Context {
+	logger := log.New(os.Stderr, "🐙 ", 0)
+	ctx := context.WithValue(context.Background(), LoggerContextKey, logger)
+	return ctx
+}
