@@ -798,6 +798,7 @@ func go_error_callback(userData unsafe.Pointer, err C.xmlErrorPtr) {
 	logger := handle.Value().(*log.Logger)
 	level := ErrorLevel(err.level)
 	code := ParserError(err.code)
+	prefix := logger.Prefix()
 	message := ""
 	switch level {
 	case XML_ERR_NONE:
@@ -826,14 +827,17 @@ func go_error_callback(userData unsafe.Pointer, err C.xmlErrorPtr) {
 		message = fmt.Sprintf("%s:%d:%d (code %d) %s", C.GoString(err.file), int(err.line), int(err.int2), int(code), strings.TrimSpace(C.GoString(err.message)))
 	}
 	logger.Println(message)
+	logger.SetPrefix(prefix)
 }
 
 //export go_error_print_callback
 func go_error_print_callback(userData unsafe.Pointer, message *C.char) {
 	handle := *(*cgo.Handle)(userData)
 	logger := handle.Value().(*log.Logger)
+	prefix := logger.Prefix()
 	logger.SetPrefix(" ‣ ")
 	logger.Println(strings.TrimSpace(C.GoString(message)))
+	logger.SetPrefix(prefix)
 }
 
 func SetErrorReporting(logger *log.Logger) {
