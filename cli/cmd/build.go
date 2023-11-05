@@ -91,8 +91,18 @@ var buildCmd = &cobra.Command{
 	Use:     "build",
 	Example: "gostatic build -s build/ .",
 	Short:   "Build a site from configuration file",
-	Long:    `The build command reads build.yaml configuration file and generates site accordingly.`,
-	Args:    cobra.MaximumNArgs(1),
+	Long: `The build command reads build.yaml configuration file and applies a series of transformations
+(a pipeline) to each input file to produce output files.
+
+A transformation is a name and some arguments separated by ':'.
+
+Transformations: template, bundle.
+
+'template': Applies a XSL stylesheet to input. First argument is a path to a stylesheet.
+
+'bundle': Bundles script and css using esbuild into a single HTML (or XML) file.
+`,
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 
