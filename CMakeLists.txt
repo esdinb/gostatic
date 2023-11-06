@@ -5,6 +5,6 @@ project(gostatic
     DESCRIPTION "gostatic")
 
 add_custom_target(cli ALL
-    COMMAND env CGO_CFLAGS=${CGO_CFLAGS} CGO_LDFLAGS="${CGO_LDFLAGS}" go build -o gostatic -trimpath cli/main.go
+    COMMAND env CGO_CFLAGS="${CGO_CFLAGS}" CGO_LDFLAGS="${CGO_LDFLAGS}" go build -o gostatic -trimpath cli/main.go
 )
 
