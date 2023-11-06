@@ -107,6 +107,7 @@ func xmlFormatter(ctx context.Context) error {
 		} else {
 			var err error
 			outFile, err = openFileForWriting(outPath)
+			defer outFile.Close()
 			if err != nil {
 				return err
 			}
@@ -150,6 +151,7 @@ func htmlFormatter(ctx context.Context) error {
 			return errors.New("missing output file path for html formatter")
 		} else {
 			outFile, err = openFileForWriting(outPath)
+			defer outFile.Close()
 			if err != nil {
 				return err
 			}
@@ -184,6 +186,7 @@ func copyFormatter(ctx context.Context) error {
 			return errors.New("missing input file for copy")
 		}
 		inFile, err = openFileForReading(inPath)
+		defer inFile.Close()
 		if err != nil {
 			return errors.New("cannot open input file for copy")
 		}
@@ -196,6 +199,7 @@ func copyFormatter(ctx context.Context) error {
 			return errors.New("missing output file for copy")
 		}
 		outFile, err = openFileForWriting(outPath)
+		defer outFile.Close()
 		if err != nil {
 			return errors.New("cannot open output file for copy")
 		}
@@ -235,21 +239,13 @@ func freeContextDocument(ctx context.Context) {
 }
 
 func freeBuildContext(ctx context.Context) {
-	var (
-		inFile  *os.File
-		outFile *os.File
-		ok      bool
-	)
-
 	freeContextDocument(ctx)
 
-	inFile, ok = ctx.Value(builder_context.InFileContextKey).(*os.File)
-	if ok {
+	if inFile, ok := ctx.Value(builder_context.InFileContextKey).(*os.File); ok {
 		inFile.Close()
 	}
 
-	outFile, ok = ctx.Value(builder_context.OutFileContextKey).(*os.File)
-	if ok {
+	if outFile, ok := ctx.Value(builder_context.OutFileContextKey).(*os.File); ok {
 		outFile.Close()
 	}
 }
