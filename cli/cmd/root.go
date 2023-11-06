@@ -32,9 +32,12 @@ var rootCmd = &cobra.Command{
 
 Supported character encodings: utf-8.
 
-File extension determines input/output format: .html or .xml.
+Supported input document formats: .html, .xml.
 
-Using stdin and stdout assumes XML document encoding.
+Using stdin or stdout assumes XML document encoding.
+
+The program can be run from any location in the filesystem but can only read
+from and write to the document root (the location of a build.yaml file or cwd).
 `,
 	Version: VersionString,
 }
