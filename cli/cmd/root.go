@@ -36,6 +36,8 @@ Supported input document formats: .html, .xml.
 
 Using stdin or stdout assumes XML document encoding.
 
+One input file for each output file.
+
 The program can be run from any location in the filesystem but can only read
 from and write to the document root (the location of a build.yaml file or cwd).
 `,
