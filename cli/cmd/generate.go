@@ -23,7 +23,10 @@ var generateCmd = &cobra.Command{
 	Short:   "One-shot build from a template",
 	Long: `Build a file from a template named on the command line.
 
-This command takes as arguments a number of named transformations, a source path and a destination path. 
+Arguments to the generate command are an optional pipeline (a list of named transformations),
+an input file path pattern and an output file path in this order. 
+
+The arguments to the generate command matches keys of build.yaml configuration file sections.
     `,
 	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {

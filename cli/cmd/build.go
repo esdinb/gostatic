@@ -96,11 +96,7 @@ var buildCmd = &cobra.Command{
 
 A transformation is a name and some arguments separated by ':'.
 
-Transformations: template, bundle.
-
-'template': Applies a XSL stylesheet to input. First argument is a path to a stylesheet.
-
-'bundle': Bundles script and css using esbuild into a single HTML (or XML) file.
+Transformations: template, bundle, banner.
 `,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
