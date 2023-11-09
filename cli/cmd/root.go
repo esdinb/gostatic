@@ -14,8 +14,18 @@ var VersionString string
 var rootCmd = &cobra.Command{
 	Use:   "gostatic",
 	Short: "Make static 🥚s with 🥚 tech.",
-	Long: `Make static websites with XSLT.
+	Long: `This tool applies XSLT transformations to HTML and XML input files.
 
+Supported character encodings: utf-8.
+
+Supported input document formats: .html, .xml.
+
+Using stdin or stdout assumes XML document encoding.
+
+One input file for each output file.
+
+The program reads and writes relative to the document root (the location of a
+build.yaml file or current working directory).
 `,
 	Version: VersionString,
 }
