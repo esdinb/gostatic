@@ -76,34 +76,3 @@ func ApplyStylesheet(style *Stylesheet, doc *Document) *Document {
 
 	return nil
 }
-
-/*
-func ApplyStylesheetUser(style *Stylesheet, doc *Document, params []string, strparams []string) *Document {
-
-	cparams := C.makeParamsArray(C.int(len(params) + 1))
-	defer C.freeParamsArray(cparams, C.int(len(params)+1))
-	for idx, param := range params {
-		C.setParamsElement(cparams, C.CString(param), C.int(idx))
-	}
-
-	cstrparams := C.makeParamsArray(C.int(len(strparams) + 1))
-	defer C.freeParamsArray(cstrparams, C.int(len(strparams)+1))
-	for idx, strparam := range strparams {
-		C.setParamsElement(cstrparams, C.CString(strparam), C.int(idx))
-	}
-
-	// https://mail.gnome.org/archives/xslt/2009-December/msg00002.html
-	if ctx := C.xsltNewTransformContext(style.Ptr, doc.Ptr); ctx != nil {
-		defer C.xsltFreeTransformContext(ctx)
-		C.registerExtensionFunctions(ctx)
-		C.xsltSetCtxtParseOptions(ctx, XSLT_PARSE_OPTIONS)
-		if C.xsltQuoteUserParams(ctx, cstrparams) != -1 {
-			if ptr := C.xsltApplyStylesheetUser(style.Ptr, doc.Ptr, cparams, nil, nil, ctx); ptr != nil {
-				return makeDoc(ptr)
-			}
-		}
-	}
-
-	return nil
-}
-*/
