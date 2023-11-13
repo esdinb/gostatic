@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"gostatic/pkg/markdown"
+	"gostatic/pkg/markup"
 
 	chromahtml "github.com/alecthomas/chroma/formatters/html"
 	"github.com/evanw/esbuild/pkg/api"
@@ -53,4 +54,10 @@ func configMarkdownConverter() *markdown.Converter {
 			parser.WithAutoHeadingID(),
 		),
 	)
+}
+
+func init() {
+	markup.RegisterCommonNamespace()
+	markup.RegisterFunctionsNamespace()
+	markup.RegisterStringsNamespace()
 }

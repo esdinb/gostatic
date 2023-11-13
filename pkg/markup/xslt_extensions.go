@@ -44,8 +44,26 @@ func FormatDateCallback(ctx C.xmlXPathParserContextPtr, nArgs C.int) {
 	C.valuePush(ctx, C.xmlXPathWrapString((*C.xmlChar)(unsafe.Pointer(result))))
 }
 
-func init() {
+func RegisterDynamicNamespace() {
+	C.exsltDynRegister()
+}
+
+func RegisterCommonNamespace() {
 	C.exsltCommonRegister()
+}
+
+func RegisterFunctionsNamespace() {
 	C.exsltFuncRegister()
+}
+
+func RegisterMathNamespace() {
+	C.exsltMathRegister()
+}
+
+func RegisterSetsNamespace() {
+	C.exsltSetsRegister()
+}
+
+func RegisterStringsNamespace() {
 	C.exsltStrRegister()
 }
