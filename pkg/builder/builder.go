@@ -129,15 +129,12 @@ func xmlFormatter(ctx context.Context) error {
 
 func htmlFormatter(ctx context.Context) error {
 	var (
-		options markup.SaveOption
-		saveCtx *markup.SaveContext
+		saveCtx *markup.HTML5Serializer
 		doc     *markup.Document
 		outFile *os.File
 		ok      bool
 		err     error
 	)
-
-	options = markup.SaveOption(markup.XML_SAVE_NO_DECL | markup.XML_SAVE_NO_EMPTY | markup.XML_SAVE_AS_XML)
 
 	doc, ok = ctx.Value(builder_context.DocumentContextKey).(*markup.Document)
 	if !ok {
@@ -158,13 +155,12 @@ func htmlFormatter(ctx context.Context) error {
 		}
 	}
 
-	saveCtx = markup.SaveToIO(outFile, "UTF-8", options)
+	saveCtx = markup.NewHTML5Serializer(bufio.NewWriter(outFile))
 	if saveCtx == nil {
 		return errors.New("failed to create html formatter context")
 	}
-	defer saveCtx.Free()
 
-	if err := saveCtx.SaveDoc(doc); err != nil {
+	if err := saveCtx.Serialize(doc); err != nil {
 		return err
 	}
 
