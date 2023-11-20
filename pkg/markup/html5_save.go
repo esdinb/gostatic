@@ -7,6 +7,7 @@ import "C"
 
 import (
 	"bufio"
+	"fmt"
 	"strings"
 )
 
@@ -70,10 +71,10 @@ func (s *HTML5Serializer) serializeFragment(current *Node) error {
 			s.serializeComment(current)
 		case XML_PI_NODE:
 			s.serializeProcessingInstruction(current)
-		case XML_DOCUMENT_TYPE_NODE:
+		case XML_DTD_NODE:
 			s.serializeDocumentType(current)
 		default:
-			panic("invalid state")
+			panic(fmt.Sprintf("invalid state %v", current.Type()))
 		}
 		current = current.Next()
 	}
@@ -159,7 +160,7 @@ func (s *HTML5Serializer) serializeDocumentType(node *Node) error {
 	if _, err := s.WriteString(node.Name()); err != nil {
 		return err
 	}
-	if _, err := s.Write([]byte{'>'}); err != nil {
+	if _, err := s.Write([]byte{'>', '\n'}); err != nil {
 		return err
 	}
 	return nil
