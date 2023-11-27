@@ -1,15 +1,16 @@
 <?xml version="1.0"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
-    <xsl:output method="html"/>
+
+    <xsl:output method="html" doctype-public="html"/>
+
     <xsl:template match="/">
-        <html lang="da">
-            <head>
-                <meta charset="utf-8"/>
-                <title>this is a test</title>
-            </head>
-            <body>
-                <h1>This is only a test</h1>
-            </body>
-        </html>
+        <xsl:apply-templates select="*|@*|text()"/>
     </xsl:template>
+
+    <xsl:template match="*|@*|text()">
+        <xsl:copy>
+            <xsl:apply-templates select="*|@*|text()"/>
+        </xsl:copy>
+    </xsl:template>
+
 </xsl:stylesheet>
