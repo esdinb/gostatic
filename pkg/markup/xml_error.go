@@ -790,8 +790,6 @@ func ResetLastError() {
 	C.xmlResetLastError()
 }
 
-var loggerHandle *cgo.Handle
-
 //export go_error_callback
 func go_error_callback(userData unsafe.Pointer, err C.xmlErrorPtr) {
 	handle := *(*cgo.Handle)(userData)
@@ -840,12 +838,7 @@ func go_error_print_callback(userData unsafe.Pointer, message *C.char) {
 	logger.SetPrefix(prefix)
 }
 
-func SetErrorReporting(logger *log.Logger) {
-	if loggerHandle != nil {
-		loggerHandle.Delete()
-	}
-	handle := cgo.NewHandle(logger)
-	loggerHandle = &handle
+func SetErrorReporting(loggerHandle *cgo.Handle) {
 	C.xmlSetStructuredErrorFunc(unsafe.Pointer(loggerHandle), C.xmlStructuredErrorFunc(C.structured_error_func))
 	C.set_xslt_error_func(unsafe.Pointer(loggerHandle))
 }

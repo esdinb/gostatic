@@ -16,6 +16,7 @@ func (k *contextKey) String() string {
 }
 
 var LoggerContextKey = contextKey{"logger"}
+var LoggerHandleContextKey = contextKey{"loggerhandle"}
 var BuildPathContextKey = contextKey{"buildpath"}
 var InPathContextKey = contextKey{"inpath"}
 var OutPathContextKey = contextKey{"outpath"}

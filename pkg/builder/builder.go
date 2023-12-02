@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/cgo"
 	"strings"
 
 	builder_context "gostatic/pkg/builder/context"
@@ -237,6 +238,10 @@ func freeContextDocument(ctx context.Context) {
 func freeBuildContext(ctx context.Context) {
 	freeContextDocument(ctx)
 
+	if loggerHandle, ok := ctx.Value(builder_context.LoggerHandleContextKey).(*cgo.Handle); ok {
+		loggerHandle.Delete()
+	}
+
 	if inFile, ok := ctx.Value(builder_context.InFileContextKey).(*os.File); ok {
 		inFile.Close()
 	}
@@ -329,7 +334,9 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 	ctx = context.WithValue(ctx, builder_context.StringParamsContextKey, []string{})
 
 	if logger, ok := ctx.Value(builder_context.LoggerContextKey).(*log.Logger); ok {
-		markup.SetErrorReporting(logger)
+		handle := cgo.NewHandle(logger)
+		ctx = context.WithValue(ctx, builder_context.LoggerHandleContextKey, &handle)
+		markup.SetErrorReporting(&handle)
 	}
 
 	inPath := b.In
