@@ -29,7 +29,15 @@ func TransformBanner(ctx context.Context, args []string) (context.Context, Statu
 		return ctx, Continue, errors.New("missing input document")
 	}
 	comment := document.NewComment("\n" + banner + "\n\n")
-	document.FirstChild().AddPrevSibling(comment)
+	var node *markup.Node
+	if node = document.FirstChild(); node != nil {
+		node.AddPrevSibling(comment)
+	} else if node = document.Root(); node != nil {
+		node.AddChild(comment)
+	} else {
+		document.SetRoot(comment)
+	}
+
 	return ctx, Continue, nil
 }
 
