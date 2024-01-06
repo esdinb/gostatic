@@ -331,7 +331,7 @@ func (b *BuildSection) Build(ctx context.Context, rootPath string) error {
 	ctx = context.WithValue(ctx, builder_context.OutPathContextKey, b.Out)
 	ctx = context.WithValue(ctx, builder_context.RootPathContextKey, rootPath)
 	ctx = context.WithValue(ctx, builder_context.ParamsContextKey, []string{})
-	ctx = context.WithValue(ctx, builder_context.StringParamsContextKey, []string{})
+	ctx = context.WithValue(ctx, builder_context.StringParamsContextKey, []string{"root-path", rootPath})
 
 	if logger, ok := ctx.Value(builder_context.LoggerContextKey).(*log.Logger); ok {
 		handle := cgo.NewHandle(logger)
