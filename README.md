@@ -5,21 +5,20 @@ Static website generator.
 
 # WIP
 
-Based on [libxslt](https://gitlab.gnome.org/GNOME/libxslt) and [libxml2](https://gitlab.gnome.org/GNOME/libxml2). 
-
-Uses [yuins goldmark](https://github.com/yuin/goldmark) Markdown parser.
-
-Uses [evanws esbuild](https://github.com/evanw/esbuild) bundler.
-
-CGO wrappers for libxml2 are based on [jbussdiekers golibxml](https://github.com/jbussdieker/golibxml) code.
-
 ## Requirements
 
 Requires Go version 1.21 or later.
 
-The libxml2 and libxslt libraries needs to be installed on the system.
+### Go libraries:
 
-The [lexbor](https://github.com/lexbor/lexbor) libraries needs to be installed on the system.
+- [goldmark](https://github.com/yuin/goldmark)
+- [esbuild](https://github.com/evanw/esbuild)
+
+### C libraries:
+
+- [libxml2](https://gitlab.gnome.org/GNOME/libxml2)
+- [libxslt](https://gitlab.gnome.org/GNOME/libxslt)
+- [lexbor](https://github.com/lexbor/lexbor)
 
 C library bindings uses CGO and require a C compiler to also be installed.
 
