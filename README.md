@@ -1,6 +1,8 @@
 # gostatic
 Static website generator.
 
+⚠️ Moved to [Codeberg](https://codeberg.org/espend/gostatic)
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/esdinb/gostatic?style=flat-square)](https://goreportcard.com/report/github.com/golang-standards/project-layout)
 
 # WIP
